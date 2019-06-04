@@ -1,0 +1,24 @@
+{
+  "name": "grid.js",
+  "version": "0.0.1",
+  "description": "A node API sitting between PySyft/syft.js on the server and syft.js on the client",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openmined/grid.js.git"
+  },
+  "author": "OpenMined",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/openmined/grid.js/issues"
+  },
+  "homepage": "https://github.com/openmined/grid.js#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.2.0"
+  }
+}
