@@ -1,7 +1,7 @@
 {
   "name": "grid.js",
   "version": "0.0.1",
-  "description": "A node API sitting between PySyft/syft.js on the server and syft.js on the client",
+  "description": "A Node API sitting between PySyft/syft.js on the server and syft.js on the client",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
