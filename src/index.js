@@ -1,24 +1,28 @@
-const app = require('express')();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+import express from 'express';
+import http from 'http';
+import socketIO from 'socket.io';
+import compression from 'compression';
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIO(server);
+
 const port = process.env.PORT || 3000;
 
-app.get('/', function(req, res) {
-  res.send('Welcome to the Syft Grid!');
-});
+app.use(compression({}));
 
-io.on('connection', function(socket) {
+io.on('connection', socket => {
   console.log('Syft connected');
 
-  socket.on('disconnect', function() {
+  socket.on('disconnect', () => {
     console.log('Syft disconnected');
   });
 
-  socket.on('syft', function(msg) {
+  socket.on('syft', msg => {
     console.log('Message:', msg);
   });
 });
 
-http.listen(port, function() {
+server.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);
 });
