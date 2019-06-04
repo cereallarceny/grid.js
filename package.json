@@ -4,7 +4,9 @@
   "description": "A Node API sitting between PySyft/syft.js on the server and syft.js on the client",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "nodemon --exec babel-node src/index.js",
+    "build": "babel src --out-dir dist",
+    "serve": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,8 +19,24 @@
     "url": "https://github.com/openmined/grid.js/issues"
   },
   "homepage": "https://github.com/openmined/grid.js#readme",
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
   "dependencies": {
     "express": "^4.17.1",
     "socket.io": "^2.2.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/node": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "babel-core": "^6.26.3",
+    "husky": "^2.3.0",
+    "nodemon": "^1.19.1",
+    "prettier": "^1.17.1",
+    "pretty-quick": "^1.11.0"
   }
 }
