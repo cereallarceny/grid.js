@@ -1,13 +1,14 @@
 {
   "name": "grid.js",
   "version": "0.0.1",
-  "description": "A Node API sitting between PySyft/syft.js on the server and syft.js on the client",
+  "description": "A Node socket API supporting syft.js workers in the browser",
   "main": "src/index.js",
   "scripts": {
     "start": "nodemon --exec babel-node src/index.js",
     "build": "babel src --out-dir dist",
     "serve": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
   },
   "repository": {
     "type": "git",
@@ -25,9 +26,7 @@
     }
   },
   "dependencies": {
-    "compression": "^1.7.4",
-    "express": "^4.17.1",
-    "socket.io": "^2.2.0"
+    "ws": "^7.1.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",

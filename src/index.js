@@ -1,28 +1,17 @@
-import express from 'express';
-import http from 'http';
-import socketIO from 'socket.io';
-import compression from 'compression';
-
-const app = express();
-const server = http.createServer(app);
-const io = socketIO(server);
+import WebSocket from 'ws';
 
 const port = process.env.PORT || 3000;
+const wss = new WebSocket.Server({ port });
 
-app.use(compression({}));
-
-io.on('connection', socket => {
+wss.on('connection', ws => {
   console.log('Syft connected');
 
-  socket.on('disconnect', () => {
+  ws.on('close', () => {
     console.log('Syft disconnected');
   });
 
-  socket.on('syft', msg => {
-    console.log('Message:', msg);
+  ws.on('message', message => {
+    console.log('Message:', message);
+    ws.send(message);
   });
-});
-
-server.listen(port, () => {
-  console.log(`Listening on http://localhost:${port}`);
 });
