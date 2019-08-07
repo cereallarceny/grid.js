@@ -1,64 +1,52 @@
 import WebSocket from 'ws';
-import examplePlan from './example-plan';
 
-const uuid = require('uuid/v4');
+import initDB from './init-db';
+import { getProtocol, getPlans, createScope } from './messages';
 
 const port = process.env.PORT || 3000;
 const wss = new WebSocket.Server({ port });
 
-const ALL_PROTOCOLS = [
-  {
-    id: 'millionaire-problem',
-    plans: [
-      [examplePlan, examplePlan, examplePlan], // user 1
-      [examplePlan, examplePlan, examplePlan], // user 2
-      [examplePlan, examplePlan, examplePlan] // user 3
-    ]
-  }
-];
+// Our main socket server function - all async, all day
+const startSocketServer = async () => {
+  const db = await initDB();
 
-wss.on('connection', ws => {
-  console.log('Syft connected');
+  wss.on('connection', ws => {
+    console.log('Syft connected');
 
-  ws.on('close', () => {
-    console.log('Syft disconnected');
+    ws.on('close', () => {
+      console.log('Syft disconnected');
+    });
+
+    ws.on('message', async message => {
+      const { type, data } = JSON.parse(message);
+      const send = data => ws.send(JSON.stringify({ type, data }));
+
+      if (type === 'get-protocol') {
+        const protocol = await getProtocol(db, data);
+
+        send({
+          instanceId: data.instanceId,
+          protocol
+        });
+      } else if (type === 'get-plans') {
+        const plans = await getPlans(db, data);
+
+        send({
+          ...data,
+          plans
+        });
+      } else if (type === 'create-scope') {
+        const { scopeId, creatorPlan } = await createScope(db, data);
+
+        send({
+          ...data,
+          scopeId,
+          plan: creatorPlan
+        });
+      }
+    });
   });
+};
 
-  ws.on('message', message => {
-    const { type, data } = JSON.parse(message);
-
-    if (type === 'get-protocol') {
-      // TODO: Patrick we need to store this somewhere!
-      const instanceId = data.instanceId;
-
-      ws.send(
-        JSON.stringify({
-          type,
-          data: {
-            instanceId,
-            protocol:
-              ALL_PROTOCOLS.filter(({ id }) => id === data.protocolId)[0] ||
-              null
-          }
-        })
-      );
-    } else if (type === 'create-scope') {
-      // TODO: Patrick we need to store this somewhere!
-      const creatorInstanceId = data.instanceId;
-      const participants = data.participants;
-      const protocolId = data.protocolId;
-
-      const scopeId = uuid();
-
-      ws.send(
-        JSON.stringify({
-          type,
-          data: {
-            ...data,
-            scopeId
-          }
-        })
-      );
-    }
-  });
-});
+// Kick things off
+startSocketServer();
