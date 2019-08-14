@@ -28,7 +28,7 @@
   "dependencies": {
     "lowdb": "^1.0.0",
     "uuid": "^3.3.2",
-    "ws": "^7.1.1"
+    "ws": "^7.1.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",
@@ -36,7 +36,7 @@
     "@babel/node": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "babel-core": "^6.26.3",
-    "husky": "^3.0.2",
+    "husky": "^3.0.3",
     "jest": "^24.8.0",
     "nodemon": "^1.19.1",
     "prettier": "^1.18.2",
