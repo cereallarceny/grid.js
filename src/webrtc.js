@@ -28,10 +28,15 @@ export default (type, data, send, rooms, ws) => {
         }
       });
     }
-  } else if (type === 'webrtc: peer-disconnected') {
-    // TODO
+  } else if (type === 'webrtc: peer-left') {
     // When disconnecting a client, we inform the rest about it
-    // socket.broadcast.to(socket.room).emit('leave', socket.user_id);
-    // delete users[socket.user_id];
+    Object.keys(rooms[data.scopeId]).forEach(client => {
+      if (client !== data.instanceId) {
+        send('webrtc: peer-left', data, rooms[data.scopeId][client]);
+      }
+    });
+
+    // Remove that peer from the rooms object
+    delete rooms[data.scopeId][data.instanceId];
   }
 };
