@@ -1,8 +1,3 @@
-/*
-TODO:
-- https://blog.jscrambler.com/scaling-node-js-socket-server-with-nginx-and-redis/
-*/
-
 import WebSocket from 'ws';
 
 import initDB from './init-db';
@@ -14,6 +9,8 @@ const wss = new WebSocket.Server({ port });
 
 // Our main socket server function - all async, all day
 const startSocketServer = async () => {
+  console.log(`Server running on ${port} port, PID: ${process.pid}`);
+
   const db = await initDB();
   const rooms = {};
 

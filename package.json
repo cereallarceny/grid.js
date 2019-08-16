@@ -10,6 +10,9 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch"
   },
+  "engines": {
+    "node": "10.16.3"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/openmined/grid.js.git"
@@ -26,6 +29,7 @@
     }
   },
   "dependencies": {
+    "@babel/runtime": "^7.5.5",
     "lowdb": "^1.0.0",
     "uuid": "^3.3.2",
     "ws": "^7.1.2"
@@ -34,6 +38,7 @@
     "@babel/cli": "^7.5.5",
     "@babel/core": "^7.5.5",
     "@babel/node": "^7.5.5",
+    "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "babel-core": "^6.26.3",
     "husky": "^3.0.3",
