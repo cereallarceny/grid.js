@@ -66,10 +66,10 @@ const startSocketServer = async () => {
           protocol
         });
       } else if (type === 'get-plans') {
-        const plans = await getPlans(db, data);
+        const { user, plans } = await getPlans(db, data);
 
         send('get-plans', {
-          ...data,
+          ...user,
           plans
         });
       } else if (type === 'create-scope') {
