@@ -36,7 +36,7 @@ export const getPlans = async (db, data) => {
     .value();
 
   // Return that user's specific plans
-  return { user, protocol: protocol.plans[user.plan] };
+  return { user, plans: protocol.plans[user.plan] };
 };
 
 // Create and assign a scope for a user, assigning them as the creator, and give them the first plan
