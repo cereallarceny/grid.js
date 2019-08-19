@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 
 import initDB from './init-db';
-import { getProtocol, getPlans, createScope } from './messages';
+import { getPlans } from './messages';
 import runWebRTC from './webrtc';
 
 const port = process.env.PORT || 3000;
@@ -23,8 +23,8 @@ const startSocketServer = async () => {
     ws.on('close', () => {
       // If at some point we assigned this socket connection an instanceId and scopeId and "rooms" knows about it, remove them from the rooms
       if (
-        ws.hasOwnProperty('instanceId') &&
-        ws.hasOwnProperty('scopeId') &&
+        ws.instanceId &&
+        ws.scopeId &&
         rooms.hasOwnProperty(ws.scopeId) &&
         rooms[ws.scopeId].hasOwnProperty(ws.instanceId)
       ) {
@@ -56,9 +56,9 @@ const startSocketServer = async () => {
       if (type.includes('webrtc:')) {
         runWebRTC(type, data, send, rooms, ws);
       } else if (type === 'get-plans') {
-        const data = await getPlans(db, data);
+        const returnedData = await getPlans(db, data);
 
-        send('get-plans', { ...data });
+        send('get-plans', { ...returnedData });
       }
     });
   });
