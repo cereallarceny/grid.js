@@ -15,8 +15,6 @@ const startSocketServer = async () => {
   const rooms = {};
 
   wss.on('connection', ws => {
-    console.log('Syft connected');
-
     const send = (type, data, socket = ws) =>
       socket.send(JSON.stringify({ type, data }));
 
@@ -38,8 +36,6 @@ const startSocketServer = async () => {
           ws
         );
       }
-
-      console.log('Syft disconnected');
     });
 
     ws.on('message', async message => {
