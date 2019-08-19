@@ -2,10 +2,7 @@ const uuid = require('uuid/v4');
 
 // Get the plans of a user given an instanceId and protocolId
 // If they also pass a scopeId, they must
-export const getPlans = async (
-  db,
-  { instanceId = uuid(), scopeId, protocolId }
-) => {
+export const getPlans = async (db, { instanceId, scopeId, protocolId }) => {
   if (!protocolId) return { error: 'Please supply a protocolId' };
 
   // Create an empty participants list which we will populate later
@@ -16,6 +13,11 @@ export const getPlans = async (
     .get('protocols')
     .find({ id: protocolId })
     .value();
+
+  // If we don't already have an instanceId, assign one to us
+  if (!instanceId) {
+    instanceId = uuid();
+  }
 
   // If we don't have a scopeId, we must be creating a new one
   if (!scopeId) {
