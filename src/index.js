@@ -45,41 +45,20 @@ const startSocketServer = async () => {
     ws.on('message', async message => {
       const { type, data } = JSON.parse(message);
 
-      if (
-        !ws.hasOwnProperty('instanceId') &&
-        data.hasOwnProperty('instanceId')
-      ) {
+      if (!ws.instanceId && data.instanceId) {
         ws.instanceId = data.instanceId;
       }
 
-      if (!ws.hasOwnProperty('scopeId') && data.hasOwnProperty('scopeId')) {
+      if (!ws.scopeId && data.scopeId) {
         ws.scopeId = data.scopeId;
       }
 
       if (type.includes('webrtc:')) {
         runWebRTC(type, data, send, rooms, ws);
-      } else if (type === 'get-protocol') {
-        const protocol = await getProtocol(db, data);
-
-        send('get-protocol', {
-          instanceId: data.instanceId,
-          protocol
-        });
       } else if (type === 'get-plans') {
-        const { user, plans } = await getPlans(db, data);
+        const data = await getPlans(db, data);
 
-        send('get-plans', {
-          ...user,
-          plans
-        });
-      } else if (type === 'create-scope') {
-        const { scopeId, creatorPlan } = await createScope(db, data);
-
-        send('create-scope', {
-          ...data,
-          scopeId,
-          plan: creatorPlan
-        });
+        send('get-plans', { ...data });
       }
     });
   });

@@ -1,33 +1,14 @@
 const uuid = require('uuid/v4');
 
-// We need to save the user to the list of users and assign them the protocolId
-// After that, return the protocol the user asked about
-export const getProtocol = async (db, data) => {
-  const { instanceId, protocolId } = data;
-
-  // Store a new record linking the user's instanceId to their chosen protocolId
-  await db
-    .get('users')
-    .push({ instanceId, protocolId })
-    .write();
-
-  // Get the appropriate protocol from the database and return it
-  return await db
-    .get('protocols')
-    .find({ id: protocolId })
-    .value();
-};
-
-// Given an instanceId and a scopeId, find the exact user
-// Once this user is found, get the specific list of plans assigned to them
+// Get the plans of a user given an instanceId and protocolId
+// If they also pass a scopeId, they must
 export const getPlans = async (db, data) => {
-  const { instanceId, scopeId } = data;
+  let { instanceId, scopeId, protocolId } = data;
 
-  // Get the user
-  const user = await db
-    .get('users')
-    .find({ instanceId, scopeId })
-    .value();
+  const participants = [];
+
+  if (!instanceId) return { error: 'Please supply an instanceId' };
+  if (!protocolId) return { error: 'Please supply a protocolId' };
 
   // Get the protocol of that user
   const protocol = await db
@@ -35,43 +16,62 @@ export const getPlans = async (db, data) => {
     .find({ id: user.protocolId })
     .value();
 
-  // Return that user's specific plans
-  return { user, plans: protocol.plans[user.plan] };
-};
+  // If we don't have a scopeId, we must be creating a new one
+  if (!scopeId) {
+    // Give this new scope an id
+    scopeId = uuid();
 
-// Create and assign a scope for a user, assigning them as the creator, and give them the first plan
-// After that, for each of the participants we need to create their records with the same scope, assigning them as participants, and giving them the other plans
-// We just need to return the scopeId and the creator's plan index, syft.js will handle picking it from the chosen protocol
-export const createScope = async (db, data) => {
-  const { instanceId, participants, protocolId } = data;
-  const scopeId = uuid(),
-    creatorPlan = 0;
-
-  // Update the creator of the scope as the creator and assign them a plan
-  await db
-    .get('users')
-    .find({ instanceId })
-    .assign({
-      scopeId,
-      role: 'creator',
-      plan: creatorPlan
-    })
-    .write();
-
-  // For each of the participants, add them to the database
-  await participants.forEach(async (participant, i) => {
+    // Update the user creating this new scope to be the creator and assign them the 0th list of plans
     await db
       .get('users')
-      .push({
-        instanceId: participant,
-        protocolId,
+      .find({ instanceId, protocolId })
+      .assign({
         scopeId,
-        role: 'participant',
-        plan: i + 1
+        role: 'creator',
+        plan: 0
       })
       .write();
-  });
 
-  // Return only the scopeId that's been created and the plan index that the creator needs to handle
-  return { scopeId, creatorPlan };
+    // Create all the other participants (protocol.plans.length - 1 since the first is the scope creator)
+    await [...Array(protocol.plans.length - 1)].forEach(async (_, i) => {
+      // For each user create an id and push them onto the participants list
+      const participantId = uuid();
+      participants.push(participantId);
+
+      // Put them in the users database as a participant and assign them a list of plans
+      await db
+        .get('users')
+        .push({
+          instanceId: participantId,
+          protocolId,
+          scopeId,
+          role: 'participant',
+          plan: i + 1
+        })
+        .write();
+    });
+  }
+
+  // Get the user
+  const user = await db
+    .get('users')
+    .find({ instanceId, scopeId, protocolId })
+    .value();
+
+  // If we didn't just create the scope, make sure we always return the list of other participants
+  if (participants.length === 0) {
+    const otherParticipants = await db
+      .get('users')
+      .find({ scopeId, protocolId })
+      .value();
+
+    otherParticipants.forEach(participant => {
+      if (participant.instanceId !== instanceId) {
+        participants.push(participant.instanceId);
+      }
+    });
+  }
+
+  // Return the user, their assigned scopeId (passed to us or freshly created), their list of plans, and the other participants
+  return { user, plans: protocol.plans[user.plan], participants };
 };
