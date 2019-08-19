@@ -2,13 +2,14 @@ const uuid = require('uuid/v4');
 
 // Get the plans of a user given an instanceId and protocolId
 // If they also pass a scopeId, they must
-export const getPlans = async (db, data) => {
-  let { instanceId, scopeId, protocolId } = data;
-
-  const participants = [];
-
-  if (!instanceId) return { error: 'Please supply an instanceId' };
+export const getPlans = async (
+  db,
+  { instanceId = uuid(), scopeId, protocolId }
+) => {
   if (!protocolId) return { error: 'Please supply a protocolId' };
+
+  // Create an empty participants list which we will populate later
+  const participants = [];
 
   // Get the protocol of that user
   const protocol = await db
