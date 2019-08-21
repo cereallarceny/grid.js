@@ -1,9 +1,9 @@
 import low from 'lowdb';
-import FileAsync from 'lowdb/adapters/FileAsync';
+import FileSync from 'lowdb/adapters/FileSync';
 
 import examplePlan from './example-plan';
 
-export default async () => {
+export default () => {
   const DEFAULT_DATA = {
     protocols: [
       {
@@ -18,9 +18,11 @@ export default async () => {
     users: []
   };
 
-  const adapter = new FileAsync('db.json', {
+  // Create a LowDB data based on the default data containing a sample protocol
+  const adapter = new FileSync('db.json', {
     defaultValue: DEFAULT_DATA
   });
 
-  return await low(adapter);
+  // Return this DB adapter
+  return low(adapter);
 };
