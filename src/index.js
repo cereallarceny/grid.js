@@ -9,7 +9,7 @@ import {
   WEBRTC_INTERNAL_MESSAGE,
   WEBRTC_PEER_LEFT,
   GET_PLANS
-} from './_constants';
+} from 'syft-helpers.js';
 
 const uuid = require('uuid/v4');
 
