@@ -1,4 +1,6 @@
-export default `
+const fs = require('fs');
+
+const examplePlan = `
 (19,
  (((24,
     (1,
@@ -36,3 +38,31 @@ export default `
   None,
   True))
 `;
+
+// A simple function we can run to seed the database
+function seedDB() {
+  const seedData = {
+    protocols: [
+      {
+        id: 'millionaire-problem',
+        plans: [
+          [examplePlan, examplePlan, examplePlan],
+          [examplePlan, examplePlan, examplePlan],
+          [examplePlan, examplePlan, examplePlan]
+        ]
+      }
+    ],
+    users: [{}]
+  };
+
+  Object.keys(seedData).forEach(index => {
+    fs.writeFile(
+      `seeds/${index}.json`,
+      JSON.stringify(seedData[index]),
+      'utf8',
+      () => console.log(`Seed file \"${index}\" created.`)
+    );
+  });
+}
+
+module.exports = seedDB();

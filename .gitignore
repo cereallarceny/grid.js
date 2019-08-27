@@ -3,5 +3,4 @@ coverage
 dist
 .DS_Store
 yarn.lock
-
-db.json
+seeds

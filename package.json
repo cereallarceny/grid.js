@@ -8,7 +8,8 @@
     "build": "babel src --out-dir dist",
     "serve": "node dist/index.js",
     "test": "jest --coverage",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "seed": "./run-seed.sh"
   },
   "engines": {
     "node": "10.16.3"
@@ -30,7 +31,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.5.5",
-    "lowdb": "^1.0.0",
+    "mongodb": "^3.3.1",
     "redis": "^2.8.0",
     "syft-helpers.js": "git+https://github.com/OpenMined/syft-helpers.js.git",
     "uuid": "^3.3.2",
