@@ -35,8 +35,19 @@ mongo.connect(mongoUrl, (err, client) => {
 
   // If we have a successful connection
   if (client) {
+    // Default to have the db be the client we connected as
+    let db = client;
+
+    // If we're running locally, select the grid database
+    if (
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'test'
+    ) {
+      db = client.db('grid');
+    }
+
     // Start the server officially and send in the grid database
-    start(client.db('grid'));
+    start(db);
   }
 });
 
