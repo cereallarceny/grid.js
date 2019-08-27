@@ -36,7 +36,7 @@ mongo.connect(mongoUrl, (err, client) => {
   // If we have a successful connection
   if (client) {
     // Default to have the db be the client we connected as
-    let db = client;
+    let db = client.database;
 
     // If we're running locally, select the grid database
     if (
