@@ -45,7 +45,7 @@ export const getPlans = async (db, { instanceId, scopeId, protocolId }) => {
       });
     });
 
-    // Put them in the users database
+    // Put those participants in the users database
     await db.collection('users').insertMany(participants);
   }
 
