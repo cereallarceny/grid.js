@@ -13,17 +13,20 @@ import {
 
 const uuid = require('uuid/v4');
 
+const DEFAULT_REDIS_URL = 'redis://127.0.0.1:6379';
+const DEFAULT_MONGO_URL = 'mongodb://localhost:27017';
+
 // Define the socket port and create the Websocket server
 const port = process.env.PORT || 3000;
 const wss = new WebSocket.Server({ port });
 
 // Define the Redis port and create the pub/sub clients
-const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+const redisUrl = process.env.REDIS_URL || DEFAULT_REDIS_URL;
 const pub = Redis.createClient(redisUrl);
 const sub = Redis.createClient(redisUrl);
 
 // Define the MongoDB connection url
-const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+const mongoUrl = process.env.MONGODB_URI || DEFAULT_MONGO_URL;
 
 // Initialize database
 mongo.connect(mongoUrl, (err, client) => {
@@ -35,16 +38,12 @@ mongo.connect(mongoUrl, (err, client) => {
 
   // If we have a successful connection
   if (client) {
-    // Default to have the db be the client we connected as
-    let db = client.database;
-
-    // If we're running locally, select the grid database
-    if (
-      process.env.NODE_ENV === 'development' ||
-      process.env.NODE_ENV === 'test'
-    ) {
-      db = client.db('grid');
-    }
+    // Select the DB we connected to if we have one, otherwise, use 'grid'
+    const db = client.db(
+      mongoUrl === DEFAULT_MONGO_URL
+        ? 'grid'
+        : mongoUrl.substring(mongoUrl.lastIndexOf('/') + 1)
+    );
 
     // Start the server officially and send in the grid database
     start(db);
