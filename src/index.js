@@ -127,6 +127,9 @@ const start = db => {
     // Parse the connectionId and data being passed
     const { connectionId, data } = JSON.parse(d);
 
+    // If the message is intended for a client that doesn't exist on this server, forget about it!
+    if (!clients.hasOwnProperty(connectionId)) return;
+
     // Based on this connectionId, retrieve the correct Websocket connection
     const ws = clients[connectionId];
 
