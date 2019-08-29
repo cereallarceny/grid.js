@@ -63,7 +63,7 @@ export const getPlans = async (db, { instanceId, scopeId, protocolId }) => {
 
     otherParticipants.forEach(participant => {
       if (participant.instanceId !== instanceId) {
-        participants.push(participant.instanceId);
+        participants.push(participant);
       }
     });
   }
