@@ -76,10 +76,14 @@ const start = db => {
     // Add that client to the list of clients
     clients[connectionId] = ws;
 
+    console.log('WS: New connection', connectionId, Object.keys(clients));
+
     // Any time we receive a message from the client
     ws.on('message', message => {
       // Parse the type and data from the message
       const { type, data } = JSON.parse(message);
+
+      console.log('WS: New message', connectionId, Object.keys(clients));
 
       // Publish the message to Redis (handled by sub.on('message') below)
       // The message we're passing needs to be a string for Redis to work with it... so we must re-stringify
@@ -117,6 +121,8 @@ const start = db => {
         }
       }
 
+      console.log('WS: Peer left', connectionId, Object.keys(clients));
+
       // Delete the record of that client
       delete clients[connectionId];
     });
@@ -127,8 +133,12 @@ const start = db => {
     // Parse the connectionId and data being passed
     const { connectionId, data } = JSON.parse(d);
 
+    console.log('SUB: New message', connectionId, Object.keys(clients));
+
     // If the message is intended for a client that doesn't exist on this server, forget about it!
     if (!clients.hasOwnProperty(connectionId)) return;
+
+    console.log('SUB: Executing message', connectionId, type);
 
     // Based on this connectionId, retrieve the correct Websocket connection
     const ws = clients[connectionId];
