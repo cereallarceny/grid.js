@@ -8,7 +8,8 @@ import {
   WEBRTC_NEW_PEER,
   WEBRTC_INTERNAL_MESSAGE,
   WEBRTC_PEER_LEFT,
-  GET_PLANS
+  GET_PLANS,
+  SOCKET_PING
 } from 'syft-helpers.js';
 
 const uuid = require('uuid/v4');
@@ -76,19 +77,27 @@ const start = db => {
     // Add that client to the list of clients
     clients[connectionId] = ws;
 
-    console.log('WS: New connection', connectionId, Object.keys(clients));
+    console.log('WS', 'new connection', connectionId, Object.keys(clients));
 
     // Any time we receive a message from the client
     ws.on('message', message => {
       // Parse the type and data from the message
       const { type, data } = JSON.parse(message);
 
-      console.log('WS: New message', connectionId, Object.keys(clients));
-
       // Publish the message to Redis (handled by sub.on('message') below)
       // The message we're passing needs to be a string for Redis to work with it... so we must re-stringify
       // We're not able to properly stringify the ws object, so instead we pass the connectionId and perform a lookup
-      pub.publish(type, JSON.stringify({ connectionId, data }));
+      if (type !== SOCKET_PING) {
+        console.log(
+          'WS',
+          'new message',
+          connectionId,
+          Object.keys(clients),
+          type
+        );
+
+        pub.publish(type, JSON.stringify({ connectionId, data }));
+      }
     });
 
     // Any time a client disconnects
@@ -121,7 +130,7 @@ const start = db => {
         }
       }
 
-      console.log('WS: Peer left', connectionId, Object.keys(clients));
+      console.log('WS', 'peer left', connectionId, Object.keys(clients));
 
       // Delete the record of that client
       delete clients[connectionId];
@@ -133,12 +142,18 @@ const start = db => {
     // Parse the connectionId and data being passed
     const { connectionId, data } = JSON.parse(d);
 
-    console.log('SUB: New message', connectionId, Object.keys(clients));
+    console.log('SUB', 'new message', connectionId, Object.keys(clients), type);
 
     // If the message is intended for a client that doesn't exist on this server, forget about it!
     if (!clients.hasOwnProperty(connectionId)) return;
 
-    console.log('SUB: Executing message', connectionId, type);
+    console.log(
+      'SUB',
+      'executing message',
+      connectionId,
+      Object.keys(clients),
+      type
+    );
 
     // Based on this connectionId, retrieve the correct Websocket connection
     const ws = clients[connectionId];
