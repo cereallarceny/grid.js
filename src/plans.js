@@ -11,11 +11,6 @@ export const getPlans = async (db, { instanceId, scopeId, protocolId }) => {
   // Get the protocol of that user
   const protocol = await db.collection('protocols').findOne({ id: protocolId });
 
-  // If we don't already have an instanceId, assign one to us
-  if (!instanceId) {
-    instanceId = uuid();
-  }
-
   // If we don't have a scopeId, we must be creating a new one
   if (!scopeId) {
     // Give this new scope an id
