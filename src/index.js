@@ -5,7 +5,6 @@ import { MongoClient as mongo } from 'mongodb';
 import { getPlans } from './plans';
 import {
   WEBRTC_JOIN_ROOM,
-  WEBRTC_NEW_PEER,
   WEBRTC_INTERNAL_MESSAGE,
   WEBRTC_PEER_LEFT,
   GET_PLANS,
@@ -60,9 +59,8 @@ const start = db => {
     socket.send(JSON.stringify({ type, data }));
 
   // A helper function for sending information to all clients in a room ("scopeId")
-  const sendToRoom = (type, data, instanceId, scopeId, includeMe = false) => {
-    // If this server doesn't have any clients, don't bother
-    if (!wss || !wss.clients || wss.clients.length === 0) return;
+  const sendToRoom = (type, data, includeMe = false) => {
+    const { instanceId, scopeId } = data;
 
     // Give me all the participants in the room, optionally including myself
     const participants = [...wss.clients].filter(client => {
@@ -75,6 +73,13 @@ const start = db => {
 
     // For each of them, send the message
     participants.forEach(client => send(type, data, client));
+  };
+
+  // A helper function for sending information to a specific client
+  const sendToClient = (type, data) => {
+    const client = [...wss.clients].filter(c => c.instanceId === data.to)[0];
+
+    if (client) send(type, data, client);
   };
 
   // When we have a new Websocket connection with a client
@@ -125,15 +130,23 @@ const start = db => {
 
   // Whenever Redis receives a message (from itself or from another server instance)
   sub.on('message', (type, d) => {
+    // If this server doesn't have any clients, don't bother
+    if (!wss || !wss.clients || wss.clients.length === 0) return;
+
+    // Otherwise, parse the message that was sent to us
     const data = JSON.parse(d);
 
-    // Send it to everyone else in the room
-    sendToRoom(type, data, data.instanceId, data.scopeId);
+    if (type === WEBRTC_PEER_LEFT) {
+      sendToRoom(type, data);
+    } else if (type === WEBRTC_JOIN_ROOM) {
+      sendToRoom(type, data);
+    } else if (type === WEBRTC_INTERNAL_MESSAGE) {
+      sendToClient(type, data);
+    }
   });
 };
 
 /*
 TODO:
 - Client-side issue with peer disconnecting
-- Issue with third peer joining, it seems to be that peers 1 and 2 can message, but then upon connecting the third peer, only peers 2 and 3 can message
 */
