@@ -1,0 +1,25 @@
+{
+  "name": "grid.js",
+  "description": "A Node socket API supporting syft.js workers in the browser",
+  "repository": "https://github.com/openmined/grid.js",
+  "website": "https://github.com/openmined/grid.js#readme",
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "addons": [
+    {
+      "plan": "heroku-redis:hobby-dev"
+    },
+    {
+      "plan": "mongolab:sandbox"
+    }
+  ]
+}
