@@ -2,6 +2,8 @@
 
 A Node API sitting between PySyft/syft.js on the server and syft.js on the client.
 
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
 ## Development
 
 1. Install Redis to your computer and have it running in the background ([using Homebrew](https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8))
