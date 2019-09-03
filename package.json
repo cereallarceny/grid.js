@@ -4,7 +4,7 @@
   "description": "A Node socket API supporting syft.js workers in the browser",
   "main": "src/index.js",
   "scripts": {
-    "start": "nodemon --ignore db.json --exec babel-node src/index.js",
+    "start": "VERBOSE=true nodemon --exec babel-node src/index.js",
     "build": "babel src --out-dir dist",
     "serve": "node dist/index.js",
     "test": "jest --coverage",

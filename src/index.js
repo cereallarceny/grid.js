@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import Redis from 'redis';
 import { MongoClient as mongo } from 'mongodb';
+import { Logger } from 'syft-helpers.js';
 
 import start from './socket';
 
@@ -19,10 +20,12 @@ const sub = Redis.createClient(redisUrl);
 // Define the MongoDB connection url
 const mongoUrl = process.env.MONGODB_URI || DEFAULT_MONGO_URL;
 
+const logger = new Logger('grid.js', process.env.VERBOSE);
+
 // Initialize database
 mongo.connect(mongoUrl, (err, client) => {
   if (err) {
-    console.error('Cannot connect to MongoDB', err);
+    logger.log('Cannot connect to MongoDB', err);
 
     return;
   }
@@ -37,6 +40,6 @@ mongo.connect(mongoUrl, (err, client) => {
     );
 
     // Start the server officially, sending in the database and everything else we need
-    start(db, wss, pub, sub, port);
+    start(db, wss, pub, sub, logger, port);
   }
 });
