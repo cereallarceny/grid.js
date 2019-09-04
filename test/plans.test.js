@@ -1,41 +1,45 @@
 import { Logger } from 'syft-helpers.js';
-import { MongoClient } from 'mongodb';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import { mongoOptions } from '../src';
 
 import { getPlans } from '../src/plans';
+import DBManager from './_db-manager';
 
 const uuid = require('uuid/v4');
 
 describe('Plan', () => {
-  let logger, mongoServer, connection, db;
+  let db, manager, logger;
 
   beforeAll(async () => {
+    manager = new DBManager();
+
+    await manager.start();
+    db = manager.db;
+
     logger = new Logger('grid.js', true);
-    mongoServer = new MongoMemoryServer();
-
-    const mongoUrl = await mongoServer.getConnectionString();
-    const mongoDatabase = await mongoServer.getDbName();
-
-    connection = await MongoClient.connect(mongoUrl, mongoOptions);
-    db = connection.db(mongoDatabase);
-
-    db.collection('protocols').insertOne({
-      id: 'multiple-millionaire-problem',
-      plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']]
-    });
-
-    db.collection('protocols').insertOne({
-      id: 'millionaire-problem',
-      plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
-    });
   });
 
   afterAll(async () => {
-    await db.dropDatabase();
+    await manager.stop();
+    db = null;
 
-    if (connection) connection.close();
-    if (mongoServer) await mongoServer.stop();
+    manager = null;
+    logger = null;
+  });
+
+  beforeEach(async () => {
+    await db.collection('protocols').insertMany([
+      {
+        id: 'multiple-millionaire-problem',
+        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']]
+      },
+      {
+        id: 'millionaire-problem',
+        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
+      }
+    ]);
+  });
+
+  afterEach(async () => {
+    await manager.cleanup();
   });
 
   test('should error out if a protocolId is not supplied', async () => {

@@ -1,11 +1,9 @@
 import { Logger, GET_PLANS } from 'syft-helpers.js';
 import { Server, WebSocket } from 'mock-socket';
 import Redis from 'redis-mock';
-import { MongoClient } from 'mongodb';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 
-import { mongoOptions } from '../src';
 import runSockets from '../src/socket';
+import DBManager from './_db-manager';
 
 class FakeClient {
   constructor(url) {
@@ -25,30 +23,18 @@ class FakeClient {
 describe('Socket', () => {
   const port = 3001;
   const url = `ws://localhost:${port}`;
-  const logger = new Logger('grid.js', true);
-  const wss = new Server(url);
-  const client = new FakeClient(url);
 
-  let mongoServer, connection, db, pub, sub, sockets;
+  let db, wss, client, manager, logger, pub, sub, sockets;
 
   beforeAll(async () => {
-    mongoServer = new MongoMemoryServer();
+    manager = new DBManager();
 
-    const mongoUrl = await mongoServer.getConnectionString();
-    const mongoDatabase = await mongoServer.getDbName();
+    await manager.start();
+    db = manager.db;
 
-    connection = await MongoClient.connect(mongoUrl, mongoOptions);
-    db = connection.db(mongoDatabase);
-
-    db.collection('protocols').insertOne({
-      id: 'multiple-millionaire-problem',
-      plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']]
-    });
-
-    db.collection('protocols').insertOne({
-      id: 'millionaire-problem',
-      plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
-    });
+    wss = new Server(url);
+    client = new FakeClient(url);
+    logger = new Logger('grid.js', true);
 
     pub = Redis.createClient();
     sub = Redis.createClient();
@@ -57,17 +43,36 @@ describe('Socket', () => {
   });
 
   afterAll(async () => {
-    await db.dropDatabase();
-
-    if (connection) connection.close();
-    if (mongoServer) await mongoServer.stop();
+    await manager.stop();
 
     db = null;
+
+    wss = null;
+    client = null;
+    manager = null;
+    logger = null;
 
     pub = null;
     sub = null;
 
     sockets = null;
+  });
+
+  beforeEach(async () => {
+    await db.collection('protocols').insertMany([
+      {
+        id: 'multiple-millionaire-problem',
+        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']]
+      },
+      {
+        id: 'millionaire-problem',
+        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
+      }
+    ]);
+  });
+
+  afterEach(async () => {
+    await manager.cleanup();
   });
 
   test('should initialize', () => {
@@ -77,8 +82,10 @@ describe('Socket', () => {
         data: { protocolId: 'millionaire-problem' }
       });
 
-      console.log(client);
-      console.log(client.messages);
+      setTimeout(() => {
+        console.log(client);
+        console.log(client.messages);
+      }, 100);
     };
   });
 });
