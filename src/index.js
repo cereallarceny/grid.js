@@ -24,19 +24,21 @@ const mongo = new MongoClient(mongoUrl, mongoOptions);
 
 // Connect to the DB
 mongo.connect().then(() => {
-  // Select the DB we connected to if we have one, otherwise, use 'grid'
-  const db = mongo.db(mongoDatabase);
+  if (process.env.NODE_ENV !== 'test') {
+    // Select the DB we connected to if we have one, otherwise, use 'grid'
+    const db = mongo.db(mongoDatabase);
 
-  // Create the WebSocket Server
-  const wss = new WebSocket.Server({ port: PORT });
+    // Create the WebSocket Server
+    const wss = new WebSocket.Server({ port: PORT });
 
-  // Define the Redis port and create the pub/sub clients
-  const pub = Redis.createClient(redisUrl);
-  const sub = Redis.createClient(redisUrl);
+    // Define the Redis port and create the pub/sub clients
+    const pub = Redis.createClient(redisUrl);
+    const sub = Redis.createClient(redisUrl);
 
-  // Define the Logger
-  const logger = new Logger('grid.js', process.env.VERBOSE);
+    // Define the Logger
+    const logger = new Logger('grid.js', process.env.VERBOSE);
 
-  // Start the server officially, sending in the database and everything else we need
-  start(db, wss, pub, sub, logger, PORT);
+    // Start the server officially, sending in the database and everything else we need
+    start(db, wss, pub, sub, logger, PORT);
+  }
 });

@@ -1,4 +1,9 @@
-import { Logger, GET_PLANS } from 'syft-helpers.js';
+import {
+  Logger,
+  GET_PLANS,
+  SOCKET_PING,
+  WEBRTC_JOIN_ROOM
+} from 'syft-helpers.js';
 import { Server, WebSocket } from 'mock-socket';
 import Redis from 'redis-mock';
 
@@ -11,7 +16,7 @@ class FakeClient {
     this.connection = new WebSocket(url);
 
     this.connection.onmessage = event => {
-      this.messages.push(event.data);
+      this.messages.push(JSON.parse(event.data));
     };
   }
 
@@ -24,7 +29,7 @@ describe('Socket', () => {
   const port = 3001;
   const url = `ws://localhost:${port}`;
 
-  let db, wss, client, manager, logger, pub, sub, sockets;
+  let db, manager, logger, pub, sub;
 
   beforeAll(async () => {
     manager = new DBManager();
@@ -32,14 +37,10 @@ describe('Socket', () => {
     await manager.start();
     db = manager.db;
 
-    wss = new Server(url);
-    client = new FakeClient(url);
     logger = new Logger('grid.js', true);
 
     pub = Redis.createClient();
     sub = Redis.createClient();
-
-    sockets = runSockets(db, wss, pub, sub, logger, port);
   });
 
   afterAll(async () => {
@@ -47,8 +48,6 @@ describe('Socket', () => {
 
     db = null;
 
-    wss = null;
-    client = null;
     manager = null;
     logger = null;
 
@@ -75,17 +74,77 @@ describe('Socket', () => {
     await manager.cleanup();
   });
 
-  test('should initialize', () => {
-    client.connection.onopen = () => {
-      client.sendMessage({
+  test('should get plans for a user with only a protocolId', async done => {
+    const wss = new Server(url);
+    const client = new FakeClient(url);
+
+    runSockets(db, wss, pub, sub, logger, port);
+
+    await client.sendMessage({
+      type: GET_PLANS,
+      data: { protocolId: 'millionaire-problem' }
+    });
+
+    await setTimeout(() => {
+      expect(client.messages.length).toBe(1);
+
+      const { type, data } = client.messages[0];
+
+      expect(type).toBe(GET_PLANS);
+      expect(data.user.instanceId).not.toBe(null);
+      expect(data.user.scopeId).not.toBe(null);
+      expect(data.user.protocolId).toBe('millionaire-problem');
+      expect(data.user.role).toBe('creator');
+      expect(data.user.plan).toBe(0);
+      expect(data.plans.length).toBe(3);
+      expect(data.participants.length).toBe(1);
+
+      wss.stop(done);
+    }, 100);
+  });
+
+  test('should get plans for a user with all their information', async done => {
+    const wss = new Server(url);
+    const client = new FakeClient(url);
+
+    runSockets(db, wss, pub, sub, logger, port);
+
+    await client.sendMessage({
+      type: GET_PLANS,
+      data: { protocolId: 'millionaire-problem' }
+    });
+
+    await setTimeout(async () => {
+      await client.sendMessage({
         type: GET_PLANS,
-        data: { protocolId: 'millionaire-problem' }
+        data: {
+          protocolId: 'millionaire-problem',
+          instanceId: client.messages[0].data.participants[0],
+          scopeId: client.messages[0].data.user.scopeId
+        }
       });
 
-      setTimeout(() => {
-        console.log(client);
-        console.log(client.messages);
+      await setTimeout(() => {
+        expect(client.messages.length).toBe(2);
+
+        const { type, data } = client.messages[1];
+
+        expect(type).toBe(GET_PLANS);
+        expect(data.user.instanceId).toBe(
+          client.messages[0].data.participants[0]
+        );
+        expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
+        expect(data.user.protocolId).toBe('millionaire-problem');
+        expect(data.user.role).toBe('participant');
+        expect(data.user.plan).toBe(1);
+        expect(data.plans.length).toBe(3);
+        expect(data.participants.length).toBe(1);
+        expect(data.participants[0]).toBe(
+          client.messages[0].data.user.instanceId
+        );
+
+        wss.stop(done);
       }, 100);
-    };
+    }, 100);
   });
 });
