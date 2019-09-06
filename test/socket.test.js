@@ -20,8 +20,31 @@ class FakeClient {
     };
   }
 
-  sendMessage(message) {
+  // Send message and return the next server response as a promise.
+  async sendReceive(message) {
+    let resolver, rejector;
+
+    // Wrap functions in a promise.
+    const promise = new Promise((resolve, reject) => {
+      resolver = resolve;
+      rejector = reject;
+    });
+
+    // Reject promise if there's no response in 1s after sending message.
+    const timeoutHandler = setTimeout(
+      () => rejector(new Error('No response encountered')),
+      1000
+    );
+
+    const onMessage = event => {
+      this.connection.removeEventListener('message', onMessage);
+      clearTimeout(timeoutHandler);
+      resolver(JSON.parse(event.data));
+    };
+    this.connection.addEventListener('message', onMessage);
+
     this.connection.send(JSON.stringify(message));
+    return promise;
   }
 }
 
@@ -53,8 +76,6 @@ describe('Socket', () => {
 
     pub = null;
     sub = null;
-
-    sockets = null;
   });
 
   beforeEach(async () => {
@@ -74,77 +95,98 @@ describe('Socket', () => {
     await manager.cleanup();
   });
 
-  test('should get plans for a user with only a protocolId', async done => {
+  test('should get plans for a user with only a protocolId', async () => {
     const wss = new Server(url);
     const client = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
 
-    await client.sendMessage({
+    const message = await client.sendReceive({
       type: GET_PLANS,
       data: { protocolId: 'millionaire-problem' }
     });
 
-    await setTimeout(() => {
-      expect(client.messages.length).toBe(1);
+    expect(client.messages.length).toBe(1);
 
-      const { type, data } = client.messages[0];
+    const { type, data } = message;
 
-      expect(type).toBe(GET_PLANS);
-      expect(data.user.instanceId).not.toBe(null);
-      expect(data.user.scopeId).not.toBe(null);
-      expect(data.user.protocolId).toBe('millionaire-problem');
-      expect(data.user.role).toBe('creator');
-      expect(data.user.plan).toBe(0);
-      expect(data.plans.length).toBe(3);
-      expect(data.participants.length).toBe(1);
+    expect(type).toBe(GET_PLANS);
+    expect(data.user.instanceId).not.toBe(null);
+    expect(data.user.scopeId).not.toBe(null);
+    expect(data.user.protocolId).toBe('millionaire-problem');
+    expect(data.user.role).toBe('creator');
+    expect(data.user.plan).toBe(0);
+    expect(data.plans.length).toBe(3);
+    expect(data.participants.length).toBe(1);
 
-      wss.stop(done);
-    }, 100);
+    await wss.stop();
   });
 
-  test('should get plans for a user with all their information', async done => {
+  test('should get plans for a user with all their information', async () => {
     const wss = new Server(url);
     const client = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
 
-    await client.sendMessage({
+    await client.sendReceive({
       type: GET_PLANS,
       data: { protocolId: 'millionaire-problem' }
     });
 
-    await setTimeout(async () => {
-      await client.sendMessage({
-        type: GET_PLANS,
-        data: {
-          protocolId: 'millionaire-problem',
-          instanceId: client.messages[0].data.participants[0],
-          scopeId: client.messages[0].data.user.scopeId
-        }
-      });
+    const message2 = await client.sendReceive({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'millionaire-problem',
+        instanceId: client.messages[0].data.participants[0],
+        scopeId: client.messages[0].data.user.scopeId
+      }
+    });
 
-      await setTimeout(() => {
-        expect(client.messages.length).toBe(2);
+    expect(client.messages.length).toBe(2);
 
-        const { type, data } = client.messages[1];
+    const { type, data } = message2;
 
-        expect(type).toBe(GET_PLANS);
-        expect(data.user.instanceId).toBe(
-          client.messages[0].data.participants[0]
-        );
-        expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
-        expect(data.user.protocolId).toBe('millionaire-problem');
-        expect(data.user.role).toBe('participant');
-        expect(data.user.plan).toBe(1);
-        expect(data.plans.length).toBe(3);
-        expect(data.participants.length).toBe(1);
-        expect(data.participants[0]).toBe(
-          client.messages[0].data.user.instanceId
-        );
+    expect(type).toBe(GET_PLANS);
+    expect(data.user.instanceId).toBe(
+      client.messages[0].data.participants[0]
+    );
+    expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
+    expect(data.user.protocolId).toBe('millionaire-problem');
+    expect(data.user.role).toBe('participant');
+    expect(data.user.plan).toBe(1);
+    expect(data.plans.length).toBe(3);
+    expect(data.participants.length).toBe(1);
+    expect(data.participants[0]).toBe(
+      client.messages[0].data.user.instanceId
+    );
 
-        wss.stop(done);
-      }, 100);
-    }, 100);
+    await wss.stop();
   });
+
+  test('should not send response for ping message', async () => {
+    const wss = new Server(url);
+    const client = new FakeClient(url);
+
+    runSockets(db, wss, pub, sub, logger, port);
+
+    await expect(client.sendReceive({
+      type: SOCKET_PING, data: {}
+    })).rejects.toThrow('No response encountered');
+
+    await wss.stop();
+  });
+
+  test('should not send response for invalid protocolId', async () => {
+    const wss = new Server(url);
+    const client = new FakeClient(url);
+
+    runSockets(db, wss, pub, sub, logger, port);
+
+    await expect(client.sendReceive({
+      type: GET_PLANS, data: { protocolId: 'totally invalid id' }
+    })).rejects.toThrow('No response encountered');
+
+    await wss.stop();
+  });
+
 });
