@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { mongoOptions } from '../src';
+import { mongoOptions } from '../src/_constants';
 
 // Extend the default timeout so MongoDB binaries can download
 jest.setTimeout(60000);
