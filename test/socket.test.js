@@ -10,6 +10,8 @@ import Redis from 'redis-mock';
 import runSockets from '../src/socket';
 import DBManager from './_db-manager';
 
+const NO_RESPONSE = 'no-response';
+
 class FakeClient {
   constructor(url) {
     this.messages = [];
@@ -21,7 +23,7 @@ class FakeClient {
   }
 
   // Send message and return the next server response as a promise.
-  async sendReceive(message) {
+  async send(message) {
     let resolver, rejector;
 
     // Wrap functions in a promise.
@@ -32,24 +34,27 @@ class FakeClient {
 
     // Reject promise if there's no response in 1s after sending message.
     const timeoutHandler = setTimeout(
-      () => rejector(new Error('No response encountered')),
+      () => rejector(new Error(NO_RESPONSE)),
       1000
     );
 
     const onMessage = event => {
       this.connection.removeEventListener('message', onMessage);
+
       clearTimeout(timeoutHandler);
+
       resolver(JSON.parse(event.data));
     };
-    this.connection.addEventListener('message', onMessage);
 
+    this.connection.addEventListener('message', onMessage);
     this.connection.send(JSON.stringify(message));
+
     return promise;
   }
 }
 
 describe('Socket', () => {
-  const port = 3001;
+  const port = 3000;
   const url = `ws://localhost:${port}`;
 
   let db, manager, logger, pub, sub;
@@ -101,7 +106,7 @@ describe('Socket', () => {
 
     runSockets(db, wss, pub, sub, logger, port);
 
-    const message = await client.sendReceive({
+    const message = await client.send({
       type: GET_PLANS,
       data: { protocolId: 'millionaire-problem' }
     });
@@ -128,12 +133,12 @@ describe('Socket', () => {
 
     runSockets(db, wss, pub, sub, logger, port);
 
-    await client.sendReceive({
+    await client.send({
       type: GET_PLANS,
       data: { protocolId: 'millionaire-problem' }
     });
 
-    const message2 = await client.sendReceive({
+    const message2 = await client.send({
       type: GET_PLANS,
       data: {
         protocolId: 'millionaire-problem',
@@ -147,18 +152,14 @@ describe('Socket', () => {
     const { type, data } = message2;
 
     expect(type).toBe(GET_PLANS);
-    expect(data.user.instanceId).toBe(
-      client.messages[0].data.participants[0]
-    );
+    expect(data.user.instanceId).toBe(client.messages[0].data.participants[0]);
     expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
     expect(data.user.protocolId).toBe('millionaire-problem');
     expect(data.user.role).toBe('participant');
     expect(data.user.plan).toBe(1);
     expect(data.plans.length).toBe(3);
     expect(data.participants.length).toBe(1);
-    expect(data.participants[0]).toBe(
-      client.messages[0].data.user.instanceId
-    );
+    expect(data.participants[0]).toBe(client.messages[0].data.user.instanceId);
 
     await wss.stop();
   });
@@ -169,9 +170,12 @@ describe('Socket', () => {
 
     runSockets(db, wss, pub, sub, logger, port);
 
-    await expect(client.sendReceive({
-      type: SOCKET_PING, data: {}
-    })).rejects.toThrow('No response encountered');
+    await expect(
+      client.send({
+        type: SOCKET_PING,
+        data: {}
+      })
+    ).rejects.toThrow(NO_RESPONSE);
 
     await wss.stop();
   });
@@ -182,11 +186,13 @@ describe('Socket', () => {
 
     runSockets(db, wss, pub, sub, logger, port);
 
-    await expect(client.sendReceive({
-      type: GET_PLANS, data: { protocolId: 'totally invalid id' }
-    })).rejects.toThrow('No response encountered');
+    await expect(
+      client.send({
+        type: GET_PLANS,
+        data: { protocolId: 'totally-invalid-id' }
+      })
+    ).rejects.toThrow(NO_RESPONSE);
 
     await wss.stop();
   });
-
 });
