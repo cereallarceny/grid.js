@@ -23,6 +23,7 @@ export default (db, wss, pub, sub, logger, port) => {
 
     // Give me all the participants in the room, optionally including myself
     const participants = [...wss.clients].filter(client => {
+      /* istanbul ignore if */
       if (includeMe) {
         return client.scopeId === scopeId;
       }
@@ -121,6 +122,7 @@ export default (db, wss, pub, sub, logger, port) => {
   // Whenever Redis receives a message (from itself or from another server instance)
   sub.on('message', (type, d) => {
     // If this server doesn't have any clients, don't bother
+    /* istanbul ignore if */
     if (!wss || !wss.clients || wss.clients.length === 0) return;
 
     logger.log(`Received message (${type}) on Redis`);
@@ -128,6 +130,7 @@ export default (db, wss, pub, sub, logger, port) => {
     // Otherwise, parse the message that was sent to us
     const data = JSON.parse(d);
 
+    /* istanbul ignore else */
     if (type === WEBRTC_PEER_LEFT) {
       sendToRoom(type, data);
     } else if (type === WEBRTC_JOIN_ROOM) {

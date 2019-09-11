@@ -2,7 +2,9 @@ import {
   Logger,
   GET_PLANS,
   SOCKET_PING,
-  WEBRTC_JOIN_ROOM
+  WEBRTC_JOIN_ROOM,
+  WEBRTC_PEER_LEFT,
+  WEBRTC_INTERNAL_MESSAGE
 } from 'syft-helpers.js';
 import { Server, WebSocket } from 'mock-socket';
 import Redis from 'redis-mock';
@@ -11,6 +13,45 @@ import runSockets from '../src/socket';
 import DBManager from './_db-manager';
 
 const NO_RESPONSE = 'no-response';
+
+// Wrapper for mock-socket to bring it closer to `ws` module behavior.
+class MockServer {
+  constructor(wss) {
+    this.wss = wss;
+
+    // `ws` module has `clients` property with array of server-side sockets.
+    this.clients = [];
+
+    this.wss.on('connection', ws => {
+      this.clients.push(ws);
+
+      ws.on('close', () => {
+        this.clients = this.clients.filter(client => client !== ws);
+      });
+    });
+
+    // For some reason, closing client websocket triggers `wss` close event,
+    // but not `ws` close event.
+    // We need to re-emit close event under different name to fix that.
+    this.wss.on('close', () => {
+      this.clients.forEach(socket => {
+        // Find closed client sockets and emit different event to
+        // trigger `ws.on('close')`.
+        if (socket.readyState === WebSocket.CLOSED) {
+          socket.dispatchEvent(new Event('server::close'));
+        }
+      });
+    });
+  }
+
+  on() {
+    return this.wss.on.apply(this.wss, arguments);
+  }
+
+  stop() {
+    return this.wss.stop.apply(this.wss, arguments);
+  }
+}
 
 class FakeClient {
   constructor(url) {
@@ -23,7 +64,17 @@ class FakeClient {
   }
 
   // Send message and return the next server response as a promise.
-  async send(message) {
+  async send(message, returnResponsePromise = true, responseTimeout = 200) {
+    this.connection.send(JSON.stringify(message));
+    if (returnResponsePromise) {
+      return this.receive(responseTimeout, message);
+    } else {
+      return Promise.resolve();
+    }
+  }
+
+  // Return promise of next server response.
+  async receive(timeout = 200, message = null) {
     let resolver, rejector;
 
     // Wrap functions in a promise.
@@ -33,10 +84,11 @@ class FakeClient {
     });
 
     // Reject promise if there's no response in 1s after sending message.
-    const timeoutHandler = setTimeout(
-      () => rejector(new Error(NO_RESPONSE)),
-      1000
-    );
+    const timeoutHandler = setTimeout(() => {
+      this.connection.removeEventListener('message', onMessage);
+      const messageText = JSON.stringify(message, null, 2);
+      rejector(new Error(`${NO_RESPONSE}\n${messageText}`));
+    }, timeout);
 
     const onMessage = event => {
       this.connection.removeEventListener('message', onMessage);
@@ -47,9 +99,12 @@ class FakeClient {
     };
 
     this.connection.addEventListener('message', onMessage);
-    this.connection.send(JSON.stringify(message));
 
     return promise;
+  }
+
+  close() {
+    this.connection.close();
   }
 }
 
@@ -57,7 +112,7 @@ describe('Socket', () => {
   const port = 3000;
   const url = `ws://localhost:${port}`;
 
-  let db, manager, logger, pub, sub;
+  let wss, db, manager, logger, pub, sub;
 
   beforeAll(async () => {
     manager = new DBManager();
@@ -94,14 +149,17 @@ describe('Socket', () => {
         plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
       }
     ]);
+
+    wss = new MockServer(new Server(url));
   });
 
   afterEach(async () => {
     await manager.cleanup();
+
+    wss.stop();
   });
 
   test('should get plans for a user with only a protocolId', async () => {
-    const wss = new Server(url);
     const client = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
@@ -123,12 +181,9 @@ describe('Socket', () => {
     expect(data.user.plan).toBe(0);
     expect(data.plans.length).toBe(3);
     expect(data.participants.length).toBe(1);
-
-    await wss.stop();
   });
 
   test('should get plans for a user with all their information', async () => {
-    const wss = new Server(url);
     const client = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
@@ -146,7 +201,6 @@ describe('Socket', () => {
         scopeId: client.messages[0].data.user.scopeId
       }
     });
-
     expect(client.messages.length).toBe(2);
 
     const { type, data } = message2;
@@ -160,12 +214,9 @@ describe('Socket', () => {
     expect(data.plans.length).toBe(3);
     expect(data.participants.length).toBe(1);
     expect(data.participants[0]).toBe(client.messages[0].data.user.instanceId);
-
-    await wss.stop();
   });
 
   test('should not send response for ping message', async () => {
-    const wss = new Server(url);
     const client = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
@@ -176,12 +227,9 @@ describe('Socket', () => {
         data: {}
       })
     ).rejects.toThrow(NO_RESPONSE);
-
-    await wss.stop();
   });
 
   test('should not send response for invalid protocolId', async () => {
-    const wss = new Server(url);
     const client = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
@@ -192,7 +240,179 @@ describe('Socket', () => {
         data: { protocolId: 'totally-invalid-id' }
       })
     ).rejects.toThrow(NO_RESPONSE);
+  });
 
-    await wss.stop();
+  test('should send peer join event to all clients in the scope', async () => {
+    const client1 = new FakeClient(url);
+    const client2 = new FakeClient(url);
+    const client3 = new FakeClient(url);
+
+    runSockets(db, wss, pub, sub, logger, port);
+
+    const creatorResponse = await client1.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem'
+      }
+    });
+
+    const scopeId = creatorResponse.data.user.scopeId,
+      client1Id = creatorResponse.data.user.instanceId,
+      client2Id = creatorResponse.data.participants[0];
+
+    await client2.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem',
+        instanceId: client2Id,
+        scopeId: scopeId
+      }
+    });
+
+    // Join message should not have response (join event is not sent to issuer).
+    await expect(
+      client1.send({
+        type: WEBRTC_JOIN_ROOM,
+        data: {
+          instanceId: client1Id,
+          scopeId: scopeId
+        }
+      })
+    ).rejects.toThrow(NO_RESPONSE);
+
+    expect(client1.messages).toHaveLength(1);
+    expect(client2.messages).toHaveLength(2);
+    // Client #3 didn't make get plan request hence shouldn't receive events.
+    expect(client3.messages).toHaveLength(0);
+
+    expect(client2.messages[1].type).toBe(WEBRTC_JOIN_ROOM);
+    expect(client2.messages[1].data.instanceId).toBe(client1Id);
+    expect(client2.messages[1].data.scopeId).toBe(scopeId);
+  });
+
+  test('should send peer left event when connection closes', async () => {
+    const client1 = new FakeClient(url);
+    const client2 = new FakeClient(url);
+
+    runSockets(db, wss, pub, sub, logger, port);
+
+    const creatorResponse = await client1.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem'
+      }
+    });
+
+    await client2.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem',
+        scopeId: creatorResponse.data.user.scopeId,
+        instanceId: creatorResponse.data.participants[0]
+      }
+    });
+
+    client1.close();
+
+    const messageToClient2 = await client2.receive();
+
+    expect(messageToClient2.type).toBe(WEBRTC_PEER_LEFT);
+    expect(messageToClient2.data.instanceId).toBe(
+      creatorResponse.data.user.instanceId
+    );
+  });
+
+  test('should send internal message between clients', async () => {
+    const client1 = new FakeClient(url);
+    const client2 = new FakeClient(url);
+    const client3 = new FakeClient(url);
+
+    runSockets(db, wss, pub, sub, logger, port);
+
+    const creatorResponse = await client1.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem'
+      }
+    });
+
+    await client2.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem',
+        scopeId: creatorResponse.data.user.scopeId,
+        instanceId: creatorResponse.data.participants[0]
+      }
+    });
+
+    await client3.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem',
+        scopeId: creatorResponse.data.user.scopeId,
+        instanceId: creatorResponse.data.participants[1]
+      }
+    });
+
+    const internalPayload = {
+      data: { somekey: 'somedata' },
+      scopeId: creatorResponse.data.user.scopeId,
+      // From client3 to client2.
+      instanceId: creatorResponse.data.participants[1],
+      to: creatorResponse.data.participants[0],
+      type: 'offer'
+    };
+
+    await client3.send(
+      {
+        type: WEBRTC_INTERNAL_MESSAGE,
+        data: internalPayload
+      },
+      false
+    );
+
+    const client2Message = await client2.receive();
+
+    expect(client2Message.type).toBe(WEBRTC_INTERNAL_MESSAGE);
+    expect(client2Message.data).toStrictEqual(internalPayload);
+    expect(client1.messages).toHaveLength(1);
+    expect(client2.messages).toHaveLength(2);
+    expect(client3.messages).toHaveLength(1);
+  });
+
+  test('should not send unknown message type to clients', async () => {
+    const client1 = new FakeClient(url);
+    const client2 = new FakeClient(url);
+
+    runSockets(db, wss, pub, sub, logger, port);
+
+    const creatorResponse = await client1.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem'
+      }
+    });
+
+    await client2.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem',
+        scopeId: creatorResponse.data.user.scopeId,
+        instanceId: creatorResponse.data.participants[0]
+      }
+    });
+
+    await expect(
+      client1.send({
+        type: 'weird-type',
+        data: {
+          scopeId: creatorResponse.data.user.scopeId,
+          instanceId: creatorResponse.data.participants[0]
+        }
+      })
+    ).rejects.toThrow(NO_RESPONSE);
+
+    expect(client1.messages).toHaveLength(1);
+    expect(client2.messages).toHaveLength(1);
   });
 });
