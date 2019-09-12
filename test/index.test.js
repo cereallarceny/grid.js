@@ -37,7 +37,9 @@ describe('Grid', () => {
     await new Promise(done => setTimeout(done, 200));
 
     expect(loggerSpy.mock.calls).toHaveLength(1);
-    expect(loggerSpy.mock.calls[0][0]).toMatch(/Server running on \d+ port/);
+    expect(loggerSpy.mock.calls[0][0]).toContain(
+      `Server running on ${process.env.PORT} port`
+    );
 
     process.env = { ...oldEnv };
     index.wss.close(done);

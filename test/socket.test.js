@@ -243,9 +243,9 @@ describe('Socket', () => {
   });
 
   test('should send peer join event to all clients in the scope', async () => {
-    const client1 = new FakeClient(url);
-    const client2 = new FakeClient(url);
-    const client3 = new FakeClient(url);
+    const client1 = new FakeClient(url),
+      client2 = new FakeClient(url),
+      client3 = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
 
@@ -265,7 +265,7 @@ describe('Socket', () => {
       data: {
         protocolId: 'multiple-millionaire-problem',
         instanceId: client2Id,
-        scopeId: scopeId
+        scopeId
       }
     });
 
@@ -275,7 +275,7 @@ describe('Socket', () => {
         type: WEBRTC_JOIN_ROOM,
         data: {
           instanceId: client1Id,
-          scopeId: scopeId
+          scopeId
         }
       })
     ).rejects.toThrow(NO_RESPONSE);
@@ -291,8 +291,8 @@ describe('Socket', () => {
   });
 
   test('should send peer left event when connection closes', async () => {
-    const client1 = new FakeClient(url);
-    const client2 = new FakeClient(url);
+    const client1 = new FakeClient(url),
+      client2 = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
 
@@ -323,9 +323,9 @@ describe('Socket', () => {
   });
 
   test('should send internal message between clients', async () => {
-    const client1 = new FakeClient(url);
-    const client2 = new FakeClient(url);
-    const client3 = new FakeClient(url);
+    const client1 = new FakeClient(url),
+      client2 = new FakeClient(url),
+      client3 = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
 
@@ -381,8 +381,8 @@ describe('Socket', () => {
   });
 
   test('should not send unknown message type to clients', async () => {
-    const client1 = new FakeClient(url);
-    const client2 = new FakeClient(url);
+    const client1 = new FakeClient(url),
+      client2 = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
 
@@ -402,17 +402,53 @@ describe('Socket', () => {
       }
     });
 
-    await expect(
-      client1.send({
-        type: 'weird-type',
-        data: {
-          scopeId: creatorResponse.data.user.scopeId,
-          instanceId: creatorResponse.data.participants[0]
-        }
-      })
-    ).rejects.toThrow(NO_RESPONSE);
+    const unknownMessage = {
+      type: 'weird-type',
+      data: {
+        scopeId: creatorResponse.data.user.scopeId,
+        instanceId: creatorResponse.data.participants[0]
+      }
+    };
+
+    await expect(client1.send(unknownMessage)).rejects.toThrow(NO_RESPONSE);
 
     expect(client1.messages).toHaveLength(1);
     expect(client2.messages).toHaveLength(1);
+
+    // Pretend unknown message type was subscribed and sent.
+    sub.subscribe(unknownMessage.type);
+    pub.publish(unknownMessage.type, JSON.stringify(unknownMessage.data));
+
+    await new Promise(done => setTimeout(done, 100));
+
+    expect(client1.messages).toHaveLength(1);
+    expect(client2.messages).toHaveLength(1);
+  });
+
+  test('should handle event when no clients connected', async () => {
+    runSockets(db, wss, pub, sub, logger, port);
+
+    pub.publish(WEBRTC_PEER_LEFT, JSON.stringify({ test: 1 }));
+    await new Promise(done => setTimeout(done, 100));
+
+    // Check that wss is still operable.
+    const client1 = new FakeClient(url);
+    const creatorResponse = await client1.send({
+      type: GET_PLANS,
+      data: {
+        protocolId: 'multiple-millionaire-problem'
+      }
+    });
+
+    pub.publish(
+      WEBRTC_PEER_LEFT,
+      JSON.stringify({
+        scopeId: creatorResponse.data.user.scopeId,
+        instanceId: 'dummy'
+      })
+    );
+
+    const peerLeftMessage = await client1.receive();
+    expect(peerLeftMessage.data.instanceId).toBe('dummy');
   });
 });
