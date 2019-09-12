@@ -22,9 +22,7 @@ export default (db, wss, pub, sub, logger, port) => {
     const { instanceId, scopeId } = data;
 
     // Give me all the participants in the room, excluding myself
-    const participants = [...wss.clients].filter(client => {
-      return client.scopeId === scopeId && client.instanceId !== instanceId;
-    });
+    const participants = [...wss.clients].filter(client => client.scopeId === scopeId && client.instanceId !== instanceId);
 
     logger.log(
       `Sending message (${type}) from user ${s(instanceId)} to room ${s(
