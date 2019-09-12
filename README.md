@@ -1,5 +1,12 @@
 # grid.js
 
+![Travis (.org)](https://img.shields.io/travis/OpenMined/grid.js.svg)
+![codecov](https://img.shields.io/codecov/c/github/OpenMined/grid.js)
+
+<!-- ![npm](https://img.shields.io/npm/v/grid.js.svg) -->
+
+![GitHub](https://img.shields.io/github/license/OpenMined/grid.js.svg)
+
 A Node API sitting between PySyft/syft.js on the server and syft.js on the client.
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
