@@ -18,17 +18,11 @@ export default (db, wss, pub, sub, logger, port) => {
     socket.send(JSON.stringify({ type, data }));
 
   // A helper function for sending information to all clients in a room ("scopeId")
-  const sendToRoom = (type, data, includeMe = false) => {
+  const sendToRoom = (type, data) => {
     const { instanceId, scopeId } = data;
 
-    // Give me all the participants in the room, optionally including myself
-    const participants = [...wss.clients].filter(client => {
-      if (includeMe) {
-        return client.scopeId === scopeId;
-      }
-
-      return client.scopeId === scopeId && client.instanceId !== instanceId;
-    });
+    // Give me all the participants in the room, excluding myself
+    const participants = [...wss.clients].filter(client => client.scopeId === scopeId && client.instanceId !== instanceId);
 
     logger.log(
       `Sending message (${type}) from user ${s(instanceId)} to room ${s(

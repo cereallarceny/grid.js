@@ -13,6 +13,7 @@ export default class DBManager {
 
     this.connection = null;
     this.db = null;
+    this.url = null;
   }
 
   async start() {
@@ -21,6 +22,7 @@ export default class DBManager {
 
     this.connection = await MongoClient.connect(url, mongoOptions);
     this.db = this.connection.db(db);
+    this.url = url;
   }
 
   async stop() {

@@ -13,7 +13,7 @@ import {
 import start from './socket';
 
 // Create the WebSocket Server
-const wss = new WebSocket.Server({ port });
+export const wss = new WebSocket.Server({ port });
 
 // Define the Redis port and create the pub/sub clients
 const pub = Redis.createClient(redisUrl);
