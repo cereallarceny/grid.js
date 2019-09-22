@@ -1,5 +1,12 @@
 # grid.js
 
+![Travis (.org)](https://img.shields.io/travis/OpenMined/grid.js.svg)
+![codecov](https://img.shields.io/codecov/c/github/OpenMined/grid.js)
+
+<!-- ![npm](https://img.shields.io/npm/v/grid.js.svg) -->
+
+![GitHub](https://img.shields.io/github/license/OpenMined/grid.js.svg)
+
 A Node API sitting between PySyft/syft.js on the server and syft.js on the client.
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
@@ -17,6 +24,8 @@ At this point you'll have a socket server running locally on the port of your sp
 - Full support for hot reloading (meaning you can save your changes and the server will restart automatically)
 - Full support for ES5/6/7 via Babel 7 (feel free to write in the newer Javascript syntax)
 - Prettier running in the background (all code contributed should be syntatically identical from developer to developer - [feel free to install the plugin for the editor of your choice](https://prettier.io/)).
+
+[Click here](SOCKETS.md) to view socket endpoint documentation.
 
 ## Deployment
 
