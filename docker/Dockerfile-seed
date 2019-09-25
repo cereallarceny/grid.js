@@ -1,7 +1,0 @@
-FROM mongo
-
-RUN apt-get update && apt-get install -y nodejs
-
-COPY ["run-seed.sh", "seed.js", "./"]
-
-ENTRYPOINT ["/bin/bash", "run-seed.sh"]

@@ -48,17 +48,21 @@ On a server of your choosing, you'll need to have the repository pulled down. Ma
 
 We don't provide support for this method, but it shouldn't be too hard if you have a basic dev ops knowledge. You'll also have to implement your own load balancer, which is beyond the scope of this document.
 
-### Docker
+### Docker [experimental]
 
-Run DBs and application using docker compose: `docker-compose up` (execute in grid.js root folder).
+Dockerfile is provided to build grid.js docker image:
+    
+    docker build -t gridjs -f docker/Dockerfile .
 
-After all services are started grid.js will be listening on port `3000` by default.
+When running grid.js container, Mongo and Redis endpoints can be specified using environment variables `MONGODB_URI` and `REDIS_URL`, for example:
 
-It's also possible to build and run grid.js image separately:
+    docker run -e MONGODB_URI=mongo://mongo:27017/grid -e REDIS_URL=redis://redis:6379 -e PORT=3000 -p 3000:3000 gridjs`
 
-`docker build -t gridjs -f docker/Dockerfile .`
+Example Docker Compose file that starts Mongo, Redis, and grid.js is provided in `docker/example.yml`.
+It can be used locally for 'quick-start' and testing purposes (note that Mongo and Redis data is not preserved):
 
-`docker run -e MONGODB_URI=mongo://mongo:27017/grid -e REDIS_URL=redis://redis:6379 -e PORT=3000 -p 3000:3000 gridjs` (use your specific Mongo and Redis URLs)
+    docker-compose -f docker/example.yml up 
+
 
 ## Post-deployment
 
