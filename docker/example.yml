@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017"
+  
+  redis:
+    image: redis
+    ports:
+      - "6379"
+
+  gridjs:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: gridjs
+    restart: always
+    depends_on:
+      - redis
+      - mongo
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      MONGODB_URI: "mongodb://mongo:27017/grid"
+      REDIS_URL: "redis://redis:6379"
+      VERBOSE: "1"
