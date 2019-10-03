@@ -35,7 +35,7 @@ If you want to deploy to Heroku via a one-click deployment, please click the fol
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
-The button above will install grid.js to a Heroku instance pre-configured with MongoDB and Redis automatically provisioned and connected. All resources are automatically designated to be part of the free tier, as is the dyno itself. You're welcome to scale this up to as many dynos as you desire, as well as scale the MongoDB and Redis resources yourself. [See the scaling section](#scaling) for more information.
+The button above will install grid.js to a Heroku server pre-configured with MongoDB and Redis automatically provisioned and connected. All resources are automatically designated to be part of the free tier, as is the dyno itself. You're welcome to scale this up to as many dynos as you desire, as well as scale the MongoDB and Redis resources yourself. [See the scaling section](#scaling) for more information.
 
 ### Other
 
@@ -51,8 +51,8 @@ We don't provide support for this method, but it shouldn't be too hard if you ha
 ### Docker [experimental]
 
 Dockerfile is provided to build grid.js docker image:
-    
-    docker build -t gridjs -f docker/Dockerfile .
+
+docker build -t gridjs -f docker/Dockerfile .
 
 When running grid.js container, Mongo and Redis endpoints can be specified using environment variables `MONGODB_URI` and `REDIS_URL`, for example:
 
@@ -61,8 +61,7 @@ When running grid.js container, Mongo and Redis endpoints can be specified using
 Example Docker Compose file that starts Mongo, Redis, and grid.js is provided in `docker/example.yml`.
 It can be used locally for 'quick-start' and testing purposes (note that Mongo and Redis data is not preserved):
 
-    docker-compose -f docker/example.yml up 
-
+    docker-compose -f docker/example.yml up
 
 ## Post-deployment
 

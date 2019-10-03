@@ -4,7 +4,7 @@
 
 ## Socket Endpoints
 
-You should always connect to grid.js securely using the `wss` protocol instead of `ws`. Such a url should be the load balancer endpoint and should look like: `wss://url-of-grid-instance.com`, for instance.
+You should always connect to grid.js securely using the `wss` protocol instead of `ws`. Such a url should be the load balancer endpoint and should look like: `wss://url-of-grid-server.com`, for instance.
 
 **Note:** All messages sent to and received from grid.js should be sent as JSON and adhere to the following structure:
 
@@ -45,17 +45,17 @@ The `get-plans` message is complicated in that many steps are done internally wi
 First, a few terms:
 
 - **scope** - a "private room" based on a uniquely generated ID that allows clients of that same scope to communicate to one another. [We use version 4 of the uuid NPM package](https://www.npmjs.com/package/uuid) for this, but technically any library that generates a sufficiently complex unique string ID will do. The "ID" is always referred to as the `scopeId`.
-- **instance** - a uniquely generated ID that represents a syft.js client (or theoretically a PySyft client). You can think of this as the "username" of the client that's trying to connect to grid.js. Just like `scopeId`, we also use version 4 of the uuid NPM package for generating this string value. The "ID" is always referred to as the `instanceId`.
+- **worker** - a uniquely generated ID that represents a syft.js client (or theoretically a PySyft client). You can think of this as the "username" of the client that's trying to connect to grid.js. Just like `scopeId`, we also use version 4 of the uuid NPM package for generating this string value. The "ID" is always referred to as the `workerId`.
 
 Now, for the general algorithm of how plans are generated or found, and eventually returned:
 
-1. If the client has not specified an `instanceId` in their request, generate one for them.
+1. If the client has not specified an `workerId` in their request, generate one for them.
 2. Do a lookup to find the requested protocol based on the `protocolId`.
 3. If a `scopeId` was not specified in the request, we assume that the client desires to create a new scope. In this case, we must designate the requesting client as the "creator" of that scope. Likewise, we must also generate and store the information of the other participants. The number of additional participants to be created depends on the number of lists of plans inside the protocol (_i.e. for a protocol with 3 lists of plans, 2 other users will be created_). In grid.js, a client is structured as such in the database:
 
    ```js
    {
-     instanceId: '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed',
+     workerId: '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed',
      scopeId: 'f0be538d-e185-47cc-ac68-27ec26088ba6',
      protocolId: 'millionaire-problem',
      role: 'creator', // Or "participant"
@@ -69,9 +69,9 @@ Now, for the general algorithm of how plans are generated or found, and eventual
 5. Once we have generated or retieved all the clients in the scope, we send the response to the client which includes a JSON object with three keys:
    - `user` - all of their client information
    - `plans` - a list of plans (an array of strings) for the client in string form (Serde will parse these within syft.js)
-   - `participants` - a list of the `instanceId`'s (an array of strings) of each of the other participants (not including the client themselves)
+   - `participants` - a list of the `workerId`'s (an array of strings) of each of the other participants (not including the client themselves)
 
-**Note:** If this workflow is at all still confusing, [it's suggested you read through the plans.js file](./src/plans.js) to see exactly what is happening internally. Note that it presumes the presence of an `instanceId` and a `protocolId`, but not a `scopeId`.
+**Note:** If this workflow is at all still confusing, [it's suggested you read through the plans.js file](./src/plans.js) to see exactly what is happening internally. Note that it presumes the presence of an `workerId` and a `protocolId`, but not a `scopeId`.
 
 #### Request<br />
 
@@ -92,7 +92,7 @@ If you want to join an existing scope (even as the original creator of that scop
 {
   "type": "get-plans",
   "data": {
-    "instanceId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    "workerId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
     "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6",
     "protocolId": "millionaire-problem"
   }
@@ -106,7 +106,7 @@ If you want to join an existing scope (even as the original creator of that scop
   "type": "get-plans",
   "data": {
     "user": {
-      "instanceId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+      "workerId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
       "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6",
       "protocolId": "millionaire-problem",
       "role": "creator",
@@ -127,7 +127,7 @@ If you want to join an existing scope (even as the original creator of that scop
 
 The `webrtc: join-room` endpoint is to let other participants in the same `scopeId` know that they are attempting to create a WebRTC peer-to-peer connection with them. In syft.js, we require a mesh network to be established between all peers. This is because each peer will eventually be sending information to other individual peers directly, rather than having one peer (or the socket server) control all connections. This is more computationally expensive for the client, but a requirement for truly private training to exist.
 
-The request consists of the `instanceId` and the `scopeId` of the client. The response is not sent back to the requesting client, but rather to every other client sharing the exact same `scopeId`. Obviously, a client must be connected to grid.js in order to receive another client's `webrtc: join-room` message. In the event that no other participant clients are connected, no response will be sent.
+The request consists of the `workerId` and the `scopeId` of the client. The response is not sent back to the requesting client, but rather to every other client sharing the exact same `scopeId`. Obviously, a client must be connected to grid.js in order to receive another client's `webrtc: join-room` message. In the event that no other participant clients are connected, no response will be sent.
 
 #### Request
 
@@ -135,7 +135,7 @@ The request consists of the `instanceId` and the `scopeId` of the client. The re
 {
   "type": "webrtc: join-room",
   "data": {
-    "instanceId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    "workerId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
     "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6"
   }
 }
@@ -155,7 +155,7 @@ Internal messages in WebRTC actually consist of three possible SDP messages: an 
 
 If this is confusing, don't worry! The Grid client does not need to do anything with these, or any messages with the `webrtc` prefix - simply direct them to the appropriate peer (or peers) depending on the message.
 
-In the case of an internal message, this will always be sent to exactly one other peer, whose `instanceId` is specified in the `to` field of the message.
+In the case of an internal message, this will always be sent to exactly one other peer, whose `workerId` is specified in the `to` field of the message.
 
 #### Request
 
@@ -167,7 +167,7 @@ For an offer:
 {
   "type": "webrtc: internal-message",
   "data": {
-    "instanceId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    "workerId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
     "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6",
     "to": "5b06f42e-ee96-43e6-a6e7-e24f5a21268b",
     "type": "offer",
@@ -182,7 +182,7 @@ For an answer:
 {
   "type": "webrtc: internal-message",
   "data": {
-    "instanceId": "5b06f42e-ee96-43e6-a6e7-e24f5a21268b",
+    "workerId": "5b06f42e-ee96-43e6-a6e7-e24f5a21268b",
     "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6",
     "to": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
     "type": "answer",
@@ -197,7 +197,7 @@ For an ICE candidate:
 {
   "type": "webrtc: internal-message",
   "data": {
-    "instanceId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    "workerId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
     "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6",
     "to": "5b06f42e-ee96-43e6-a6e7-e24f5a21268b",
     "type": "candidate",
@@ -226,7 +226,7 @@ This message is sent to all other clients with the same `scopeId`. This message 
 {
   "type": "webrtc: peer-left",
   "data": {
-    "instanceId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    "workerId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
     "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6"
   }
 }
