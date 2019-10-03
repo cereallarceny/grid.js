@@ -23,7 +23,7 @@ export default (db, wss, pub, sub, logger, port) => {
 
     // Give me all the participants in the room, excluding myself
     const participants = [...wss.clients].filter(
-      client => client.scopeId === scopeId && client.workerId !== workerId
+      c => c.scopeId === scopeId && c.workerId !== workerId
     );
 
     logger.log(
@@ -40,12 +40,15 @@ export default (db, wss, pub, sub, logger, port) => {
 
   // A helper function for sending information to a specific client
   const sendToClient = (type, data) => {
-    const client = [...wss.clients].filter(c => c.workerId === data.to)[0];
+    const { to, workerId, scopeId } = data;
+
+    // Find the specific client in the specific room we're looking for
+    const client = [...wss.clients].filter(
+      c => c.scopeId === scopeId && c.workerId === to
+    )[0];
 
     logger.log(
-      `Sending message (${type}) from user ${s(data.workerId)} to user ${s(
-        data.to
-      )}`
+      `Sending message (${type}) from user ${s(workerId)} to user ${s(to)}`
     );
 
     if (client) send(type, data, client);
