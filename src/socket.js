@@ -19,13 +19,15 @@ export default (db, wss, pub, sub, logger, port) => {
 
   // A helper function for sending information to all clients in a room ("scopeId")
   const sendToRoom = (type, data) => {
-    const { instanceId, scopeId } = data;
+    const { workerId, scopeId } = data;
 
     // Give me all the participants in the room, excluding myself
-    const participants = [...wss.clients].filter(client => client.scopeId === scopeId && client.instanceId !== instanceId);
+    const participants = [...wss.clients].filter(
+      client => client.scopeId === scopeId && client.workerId !== workerId
+    );
 
     logger.log(
-      `Sending message (${type}) from user ${s(instanceId)} to room ${s(
+      `Sending message (${type}) from user ${s(workerId)} to room ${s(
         scopeId
       )} (${participants.length} other participant${
         participants.length !== 1 ? 's' : ''
@@ -38,10 +40,10 @@ export default (db, wss, pub, sub, logger, port) => {
 
   // A helper function for sending information to a specific client
   const sendToClient = (type, data) => {
-    const client = [...wss.clients].filter(c => c.instanceId === data.to)[0];
+    const client = [...wss.clients].filter(c => c.workerId === data.to)[0];
 
     logger.log(
-      `Sending message (${type}) from user ${s(data.instanceId)} to user ${s(
+      `Sending message (${type}) from user ${s(data.workerId)} to user ${s(
         data.to
       )}`
     );
@@ -63,28 +65,25 @@ export default (db, wss, pub, sub, logger, port) => {
 
       // If the user is asking for their plans, they're kicking off their participation
       if (type === GET_PLANS) {
-        // If they don't yet have an instanceId, let's give them one
-        if (!data.instanceId) {
-          data.instanceId = uuid();
+        // If they don't yet have an workerId, let's give them one
+        if (!data.workerId) {
+          data.workerId = uuid();
         }
 
         try {
           // Get the plan data and the scopeId
           const getPlanData = await getPlans(db, data, logger);
 
-          // On the WebSocket object, save the instanceId and scopeId
-          ws.instanceId = data.instanceId;
+          // On the WebSocket object, save the workerId and scopeId
+          ws.workerId = data.workerId;
           ws.scopeId = getPlanData.user.scopeId;
 
-          logger.log(`Sending plans to ${s(ws.instanceId)}`);
+          logger.log(`Sending plans to ${s(ws.workerId)}`);
 
           // Send the user their plans
           send(GET_PLANS, { ...getPlanData }, ws);
         } catch (error) {
-          logger.log(
-            `Could not get plans for user ${s(data.instanceId)}`,
-            error
-          );
+          logger.log(`Could not get plans for user ${s(data.workerId)}`, error);
         }
       } else if (type !== SOCKET_PING) {
         // If it's any other type of message, publish it to Redis (handled by sub.on('message') below)
@@ -96,11 +95,11 @@ export default (db, wss, pub, sub, logger, port) => {
     // Any time a client disconnects
     ws.on('close', () => {
       const data = {
-        instanceId: ws.instanceId,
+        workerId: ws.workerId,
         scopeId: ws.scopeId
       };
 
-      logger.log(`Closed connection to user ${s(ws.instanceId)}`);
+      logger.log(`Closed connection to user ${s(ws.workerId)}`);
 
       // Publish the message to Redis to let the other participants know
       pub.publish(WEBRTC_PEER_LEFT, JSON.stringify(data));

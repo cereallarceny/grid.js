@@ -174,7 +174,7 @@ describe('Socket', () => {
     const { type, data } = message;
 
     expect(type).toBe(GET_PLANS);
-    expect(data.user.instanceId).not.toBe(null);
+    expect(data.user.workerId).not.toBe(null);
     expect(data.user.scopeId).not.toBe(null);
     expect(data.user.protocolId).toBe('millionaire-problem');
     expect(data.user.role).toBe('creator');
@@ -197,7 +197,7 @@ describe('Socket', () => {
       type: GET_PLANS,
       data: {
         protocolId: 'millionaire-problem',
-        instanceId: client.messages[0].data.participants[0],
+        workerId: client.messages[0].data.participants[0],
         scopeId: client.messages[0].data.user.scopeId
       }
     });
@@ -206,14 +206,14 @@ describe('Socket', () => {
     const { type, data } = message2;
 
     expect(type).toBe(GET_PLANS);
-    expect(data.user.instanceId).toBe(client.messages[0].data.participants[0]);
+    expect(data.user.workerId).toBe(client.messages[0].data.participants[0]);
     expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
     expect(data.user.protocolId).toBe('millionaire-problem');
     expect(data.user.role).toBe('participant');
     expect(data.user.plan).toBe(1);
     expect(data.plans.length).toBe(3);
     expect(data.participants.length).toBe(1);
-    expect(data.participants[0]).toBe(client.messages[0].data.user.instanceId);
+    expect(data.participants[0]).toBe(client.messages[0].data.user.workerId);
   });
 
   test('should not send response for ping message', async () => {
@@ -257,14 +257,14 @@ describe('Socket', () => {
     });
 
     const scopeId = creatorResponse.data.user.scopeId,
-      client1Id = creatorResponse.data.user.instanceId,
+      client1Id = creatorResponse.data.user.workerId,
       client2Id = creatorResponse.data.participants[0];
 
     await client2.send({
       type: GET_PLANS,
       data: {
         protocolId: 'multiple-millionaire-problem',
-        instanceId: client2Id,
+        workerId: client2Id,
         scopeId
       }
     });
@@ -274,7 +274,7 @@ describe('Socket', () => {
       client1.send({
         type: WEBRTC_JOIN_ROOM,
         data: {
-          instanceId: client1Id,
+          workerId: client1Id,
           scopeId
         }
       })
@@ -286,7 +286,7 @@ describe('Socket', () => {
     expect(client3.messages).toHaveLength(0);
 
     expect(client2.messages[1].type).toBe(WEBRTC_JOIN_ROOM);
-    expect(client2.messages[1].data.instanceId).toBe(client1Id);
+    expect(client2.messages[1].data.workerId).toBe(client1Id);
     expect(client2.messages[1].data.scopeId).toBe(scopeId);
   });
 
@@ -308,7 +308,7 @@ describe('Socket', () => {
       data: {
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorResponse.data.user.scopeId,
-        instanceId: creatorResponse.data.participants[0]
+        workerId: creatorResponse.data.participants[0]
       }
     });
 
@@ -317,8 +317,8 @@ describe('Socket', () => {
     const messageToClient2 = await client2.receive();
 
     expect(messageToClient2.type).toBe(WEBRTC_PEER_LEFT);
-    expect(messageToClient2.data.instanceId).toBe(
-      creatorResponse.data.user.instanceId
+    expect(messageToClient2.data.workerId).toBe(
+      creatorResponse.data.user.workerId
     );
   });
 
@@ -341,7 +341,7 @@ describe('Socket', () => {
       data: {
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorResponse.data.user.scopeId,
-        instanceId: creatorResponse.data.participants[0]
+        workerId: creatorResponse.data.participants[0]
       }
     });
 
@@ -350,7 +350,7 @@ describe('Socket', () => {
       data: {
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorResponse.data.user.scopeId,
-        instanceId: creatorResponse.data.participants[1]
+        workerId: creatorResponse.data.participants[1]
       }
     });
 
@@ -358,7 +358,7 @@ describe('Socket', () => {
       data: { somekey: 'somedata' },
       scopeId: creatorResponse.data.user.scopeId,
       // From client3 to client2.
-      instanceId: creatorResponse.data.participants[1],
+      workerId: creatorResponse.data.participants[1],
       to: creatorResponse.data.participants[0],
       type: 'offer'
     };
@@ -398,7 +398,7 @@ describe('Socket', () => {
       data: {
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorResponse.data.user.scopeId,
-        instanceId: creatorResponse.data.participants[0]
+        workerId: creatorResponse.data.participants[0]
       }
     });
 
@@ -406,7 +406,7 @@ describe('Socket', () => {
       type: 'weird-type',
       data: {
         scopeId: creatorResponse.data.user.scopeId,
-        instanceId: creatorResponse.data.participants[0]
+        workerId: creatorResponse.data.participants[0]
       }
     };
 
@@ -444,11 +444,11 @@ describe('Socket', () => {
       WEBRTC_PEER_LEFT,
       JSON.stringify({
         scopeId: creatorResponse.data.user.scopeId,
-        instanceId: 'dummy'
+        workerId: 'dummy'
       })
     );
 
     const peerLeftMessage = await client1.receive();
-    expect(peerLeftMessage.data.instanceId).toBe('dummy');
+    expect(peerLeftMessage.data.workerId).toBe('dummy');
   });
 });

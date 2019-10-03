@@ -59,13 +59,13 @@ describe('Plan', () => {
   test('should create a scope if one is not supplied', async () => {
     const creatorPlanData = await getPlans(
       db,
-      { instanceId: uuid(), protocolId: 'millionaire-problem' },
+      { workerId: uuid(), protocolId: 'millionaire-problem' },
       logger
     );
     const getPlanData = await getPlans(
       db,
       {
-        instanceId: creatorPlanData.participants[0],
+        workerId: creatorPlanData.participants[0],
         protocolId: 'millionaire-problem',
         scopeId: creatorPlanData.user.scopeId
       },
@@ -83,13 +83,13 @@ describe('Plan', () => {
   test('should get data if a scopeId is supplied', async () => {
     const creatorPlanData = await getPlans(
       db,
-      { instanceId: uuid(), protocolId: 'multiple-millionaire-problem' },
+      { workerId: uuid(), protocolId: 'multiple-millionaire-problem' },
       logger
     );
     const getPlanData = await getPlans(
       db,
       {
-        instanceId: creatorPlanData.participants[0],
+        workerId: creatorPlanData.participants[0],
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorPlanData.user.scopeId
       },

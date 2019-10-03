@@ -2,11 +2,11 @@ import { shortenId as s } from './_helpers';
 
 const uuid = require('uuid/v4');
 
-// Get the plans of a user given an instanceId and protocolId
+// Get the plans of a user given an workerId and protocolId
 // If they also pass a scopeId, they must
 export const getPlans = async (
   db,
-  { instanceId, scopeId, protocolId },
+  { workerId, scopeId, protocolId },
   logger
 ) => {
   if (!protocolId) throw new Error('Please supply a protocolId');
@@ -28,14 +28,14 @@ export const getPlans = async (
 
     // Add the user creating this new scope to the database and assign them as the creator with the 0th list of plans
     await db.collection('users').insertOne({
-      instanceId,
+      workerId,
       protocolId,
       scopeId,
       role: 'creator',
       plan: 0
     });
 
-    logger.log(`Created new creator user ${s(instanceId)}`);
+    logger.log(`Created new creator user ${s(workerId)}`);
 
     // Create all the other participants (protocol.plans.length - 1 since the first is the scope creator)
     [...Array(protocol.plans.length - 1)].forEach((_, i) => {
@@ -44,7 +44,7 @@ export const getPlans = async (
 
       // Assign each participant their protocol and scope, as well as their participant role, and specific plan
       participants.push({
-        instanceId: participantId,
+        workerId: participantId,
         protocolId,
         scopeId,
         role: 'participant',
@@ -65,11 +65,9 @@ export const getPlans = async (
   // Get the user
   const user = await db
     .collection('users')
-    .findOne({ instanceId, scopeId, protocolId });
+    .findOne({ workerId, scopeId, protocolId });
 
-  logger.log(
-    `Found ${user.role} user ${s(instanceId)} with scope ${s(scopeId)}`
-  );
+  logger.log(`Found ${user.role} user ${s(workerId)} with scope ${s(scopeId)}`);
 
   // If we didn't just create the scope, make sure we always return the list of other participants
   if (participants.length === 0) {
@@ -85,7 +83,7 @@ export const getPlans = async (
     );
 
     otherParticipants.forEach(participant => {
-      if (participant.instanceId !== instanceId) {
+      if (participant.workerId !== workerId) {
         participants.push(participant);
       }
     });
@@ -95,6 +93,6 @@ export const getPlans = async (
   return {
     user,
     plans: protocol.plans[user.plan],
-    participants: participants.map(p => p.instanceId)
+    participants: participants.map(p => p.workerId)
   };
 };
