@@ -1,7 +1,7 @@
 import Redis from 'redis';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import RedisMock from 'redis-mock';
-import { Logger } from 'syft-helpers.js';
+import { Logger } from 'syft.js';
 
 describe('Grid', () => {
   let mongoServer, mongoUrl, redisOrig, loggerSpy;

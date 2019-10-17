@@ -5,7 +5,7 @@ import {
   WEBRTC_PEER_LEFT,
   GET_PLANS,
   SOCKET_PING
-} from 'syft-helpers.js';
+} from 'syft.js';
 import { shortenId as s } from './_helpers';
 
 const uuid = require('uuid/v4');

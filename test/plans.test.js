@@ -1,4 +1,4 @@
-import { Logger } from 'syft-helpers.js';
+import { Logger } from 'syft.js';
 
 import { getPlans } from '../src/plans';
 import DBManager from './_db-manager';

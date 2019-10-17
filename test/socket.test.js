@@ -5,7 +5,7 @@ import {
   WEBRTC_JOIN_ROOM,
   WEBRTC_PEER_LEFT,
   WEBRTC_INTERNAL_MESSAGE
-} from 'syft-helpers.js';
+} from 'syft.js';
 import { Server, WebSocket } from 'mock-socket';
 import Redis from 'redis-mock';
 

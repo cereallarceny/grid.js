@@ -33,7 +33,7 @@
     "@babel/runtime": "^7.5.5",
     "mongodb": "^3.3.1",
     "redis": "^2.8.0",
-    "syft-helpers.js": "git+https://github.com/OpenMined/syft-helpers.js.git",
+    "syft.js": "git+https://github.com/openmined/syft.js.git",
     "uuid": "^3.3.2",
     "ws": "^7.1.2"
   },
