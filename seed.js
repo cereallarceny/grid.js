@@ -2,7 +2,7 @@ const fs = require('fs');
 
 const examplePlan = `
 (19,
-  (50135235179,
+  (57895708650,
   (21,
     ((6,
       ((31,
@@ -25,9 +25,9 @@ const examplePlan = `
     (6, (51684948173,)),
     (6, (3263650475,)))),
   (20,
-    ((1, (37249328214,)),
+    ((1, (4863941835,)),
     (1,
-      ((13, (86275536166, (5,(b'somethinghere')), None, None, None, None)),)))),
+      ((13, (4863941835, (5,(b'somethinghere')), None, None, None, None)),)))),
   True,
   True,
   (5, (b'plan')),
