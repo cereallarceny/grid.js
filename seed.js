@@ -1,33 +1,48 @@
 const fs = require('fs');
+const { detail } = require('syft.js');
 
-const examplePlan = `
-(19,
-  (57895708650,
-  (21,
+const assignmentIds = ['37163364537', '70249651082', '81654059278'];
+
+const exampleProtocol = `
+(24,
+ (18797824900,
+  None,
+  None,
+  (1,
+   ((6, ((5, (b'assignment1',)), ${assignmentIds[0]})),
+    (6, ((5, (b'assignment2',)), ${assignmentIds[1]})),
+    (6, ((5, (b'assignment3',)), ${assignmentIds[2]})))),
+  False))
+`;
+
+const examplePlan = id => `
+(21,
+  (${id},
+  (23,
     ((6,
-      ((31,
+      ((33,
         (1,
           ((6,
             ((5, (b'abs')),
-            (23, (25208484331, 51684948173, (5, (b'dan')), None, (10, (1,)), True)),
+            (25, (25208484331, 51684948173, (5, (b'dan')), None, (11, (1,)), True)),
             (6, ()),
             (0, ()))),
           (1, (62869536441,))))),
-      (31,
+      (33,
         (1,
           ((6,
             ((5, (b'__add__')),
-            (23, (9655331350, 62869536441, (5, (b'dan')), None, None, True)),
+            (25, (9655331350, 62869536441, (5, (b'dan')), None, None, True)),
             (6,
-              ((23, (89426198911, 4863941835, (5, (b'dan')), None, (10, (1,)), False)),)),
+              ((25, (89426198911, 4863941835, (5, (b'dan')), None, (11, (1,)), False)),)),
             (0, ()))),
           (1, (3263650475,))))))),
     (6, (51684948173,)),
     (6, (3263650475,)))),
-  (20,
+  (22,
     ((1, (4863941835,)),
     (1,
-      ((13, (4863941835, (5,(b'somethinghere')), None, None, None, None)),)))),
+      ((14, (4863941835, (5,(b'somethinghere')), None, None, None, None)),)))),
   True,
   True,
   (5, (b'plan')),
@@ -35,19 +50,20 @@ const examplePlan = `
   None))
 `;
 
+const detailToObject = text => {
+  const detailedObject = detail(text);
+
+  return {
+    id: detailedObject.id,
+    contents: text
+  };
+};
+
 // A simple function we can run to seed the database
 function seedDB() {
   const seedData = {
-    protocols: [
-      {
-        id: 'millionaire-problem',
-        plans: [
-          [examplePlan, examplePlan, examplePlan],
-          [examplePlan, examplePlan, examplePlan],
-          [examplePlan, examplePlan, examplePlan]
-        ]
-      }
-    ],
+    protocols: [detailToObject(exampleProtocol)],
+    plans: assignmentIds.map(i => detailToObject(examplePlan(i))),
     users: [{}]
   };
 
