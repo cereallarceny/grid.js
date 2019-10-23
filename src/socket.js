@@ -1,9 +1,9 @@
-import { getPlans } from './plans';
+import { getProtocol } from './protocols';
 import {
   WEBRTC_JOIN_ROOM,
   WEBRTC_INTERNAL_MESSAGE,
   WEBRTC_PEER_LEFT,
-  GET_PLANS,
+  GET_PROTOCOL,
   SOCKET_PING
 } from 'syft.js';
 import { shortenId as s } from './_helpers';
@@ -66,27 +66,32 @@ export default (db, wss, pub, sub, logger, port) => {
         logger.log(`Received message (${type}) on WS`);
       }
 
-      // If the user is asking for their plans, they're kicking off their participation
-      if (type === GET_PLANS) {
+      // If the user is asking for information on a plan, they're kicking off their participation
+      if (type === GET_PROTOCOL) {
         // If they don't yet have an workerId, let's give them one
         if (!data.workerId) {
           data.workerId = uuid();
         }
 
         try {
-          // Get the plan data and the scopeId
-          const getPlanData = await getPlans(db, data, logger);
+          // Get the protocol data, plan assignment data, scopeId, and other information
+          const protocolData = await getProtocol(db, data, logger);
 
           // On the WebSocket object, save the workerId and scopeId
           ws.workerId = data.workerId;
-          ws.scopeId = getPlanData.user.scopeId;
+          ws.scopeId = protocolData.user.scopeId;
 
-          logger.log(`Sending plans to ${s(ws.workerId)}`);
+          logger.log(
+            `Sending protocol and plan assignment to ${s(ws.workerId)}`
+          );
 
-          // Send the user their plans
-          send(GET_PLANS, { ...getPlanData }, ws);
+          // Send the user their requested data
+          send(GET_PROTOCOL, { ...protocolData }, ws);
         } catch (error) {
-          logger.log(`Could not get plans for user ${s(data.workerId)}`, error);
+          logger.log(
+            `Could not get protocol for user ${s(data.workerId)}`,
+            error
+          );
         }
       } else if (type !== SOCKET_PING) {
         // If it's any other type of message, publish it to Redis (handled by sub.on('message') below)

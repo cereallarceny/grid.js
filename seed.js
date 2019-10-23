@@ -54,7 +54,7 @@ const detailToObject = text => {
   const detailedObject = detail(text);
 
   return {
-    id: detailedObject.id,
+    id: detailedObject.id.toString(),
     contents: text
   };
 };

@@ -1,10 +1,11 @@
+import { detail } from 'syft.js';
 import { shortenId as s } from './_helpers';
 
 const uuid = require('uuid/v4');
 
-// Get the plans of a user given an workerId and protocolId
-// If they also pass a scopeId, they must
-export const getPlans = async (
+// Get the protocol the user is requesting
+// If they also pass a scopeId, they must be a participant
+export const getProtocol = async (
   db,
   { workerId, scopeId, protocolId },
   logger
@@ -19,6 +20,9 @@ export const getPlans = async (
   if (!protocol) throw new Error(`Cannot find protocol ${protocolId}`);
   else logger.log(`Found protocol ${protocolId}`);
 
+  // We also need to detail the retrieved protocol to read the plan we will need to fetch later
+  const detailedProtocol = detail(protocol.contents);
+
   // If we don't have a scopeId, we must be creating a new one
   if (!scopeId) {
     // Give this new scope an id
@@ -26,21 +30,28 @@ export const getPlans = async (
 
     logger.log(`No scopeId supplied, generating a new one ${s(scopeId)}`);
 
-    // Add the user creating this new scope to the database and assign them as the creator with the 0th list of plans
+    // Assign the creator the 0th plan
+    const creatorPlanIndex = 0;
+
+    // Add the user creating this new scope to the database and designate their role as "creator"
     await db.collection('users').insertOne({
       workerId,
       protocolId,
       scopeId,
       role: 'creator',
-      plan: 0
+      plan: creatorPlanIndex,
+      assignment: detailedProtocol.plans[creatorPlanIndex][0]
     });
 
     logger.log(`Created new creator user ${s(workerId)}`);
 
-    // Create all the other participants (protocol.plans.length - 1 since the first is the scope creator)
-    [...Array(protocol.plans.length - 1)].forEach((_, i) => {
+    // Create all the other participants (detailedProtocol.plans.length - 1 since the first is the scope creator)
+    [...Array(detailedProtocol.plans.length - 1)].forEach((_, i) => {
       // For each user create an id and push them onto the participants list
       const participantId = uuid();
+
+      // Each participant will get a plan greater than the 0th plan
+      const participantPlanIndex = i + 1;
 
       // Assign each participant their protocol and scope, as well as their participant role, and specific plan
       participants.push({
@@ -48,7 +59,8 @@ export const getPlans = async (
         protocolId,
         scopeId,
         role: 'participant',
-        plan: i + 1
+        plan: participantPlanIndex,
+        assignment: detailedProtocol.plans[participantPlanIndex][0]
       });
     });
 
@@ -67,7 +79,22 @@ export const getPlans = async (
     .collection('users')
     .findOne({ workerId, scopeId, protocolId });
 
-  logger.log(`Found ${user.role} user ${s(workerId)} with scope ${s(scopeId)}`);
+  if (user)
+    logger.log(
+      `Found ${user.role} user ${s(workerId)} with scope ${s(scopeId)}`
+    );
+
+  // Get the user's assigned plan
+  const plan = await db
+    .collection('plans')
+    .findOne({ id: detailedProtocol.plans[user.plan][1].toString() });
+
+  if (plan)
+    logger.log(
+      `Found plan ${detailedProtocol.plans[
+        user.plan
+      ][1].toString()} for user ${s(workerId)}`
+    );
 
   // If we didn't just create the scope, make sure we always return the list of other participants
   if (participants.length === 0) {
@@ -89,10 +116,18 @@ export const getPlans = async (
     });
   }
 
-  // Return the user, their assigned scopeId (passed to us or freshly created), their list of plans, and the other participants
+  // Create a map between each other user's workerId and their assignment
+  const participantAssigments = {};
+
+  participants.forEach(({ workerId, assignment }) => {
+    participantAssigments[workerId] = assignment;
+  });
+
+  // Return the user, their assigned scopeId (passed to us or freshly created), their protocol, their plan, and the list of other participants
   return {
     user,
-    plans: protocol.plans[user.plan],
-    participants: participants.map(p => p.workerId)
+    protocol: protocol.contents,
+    plan: plan.contents,
+    participants: participantAssigments
   };
 };

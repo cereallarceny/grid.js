@@ -1,6 +1,6 @@
 import {
   Logger,
-  GET_PLANS,
+  GET_PROTOCOL,
   SOCKET_PING,
   WEBRTC_JOIN_ROOM,
   WEBRTC_PEER_LEFT,
@@ -165,7 +165,7 @@ describe('Socket', () => {
     runSockets(db, wss, pub, sub, logger, port);
 
     const message = await client.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: { protocolId: 'millionaire-problem' }
     });
 
@@ -173,7 +173,7 @@ describe('Socket', () => {
 
     const { type, data } = message;
 
-    expect(type).toBe(GET_PLANS);
+    expect(type).toBe(GET_PROTOCOL);
     expect(data.user.workerId).not.toBe(null);
     expect(data.user.scopeId).not.toBe(null);
     expect(data.user.protocolId).toBe('millionaire-problem');
@@ -189,12 +189,12 @@ describe('Socket', () => {
     runSockets(db, wss, pub, sub, logger, port);
 
     await client.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: { protocolId: 'millionaire-problem' }
     });
 
     const message2 = await client.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'millionaire-problem',
         workerId: client.messages[0].data.participants[0],
@@ -205,7 +205,7 @@ describe('Socket', () => {
 
     const { type, data } = message2;
 
-    expect(type).toBe(GET_PLANS);
+    expect(type).toBe(GET_PROTOCOL);
     expect(data.user.workerId).toBe(client.messages[0].data.participants[0]);
     expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
     expect(data.user.protocolId).toBe('millionaire-problem');
@@ -236,7 +236,7 @@ describe('Socket', () => {
 
     await expect(
       client.send({
-        type: GET_PLANS,
+        type: GET_PROTOCOL,
         data: { protocolId: 'totally-invalid-id' }
       })
     ).rejects.toThrow(NO_RESPONSE);
@@ -250,7 +250,7 @@ describe('Socket', () => {
     runSockets(db, wss, pub, sub, logger, port);
 
     const creatorResponse = await client1.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem'
       }
@@ -261,7 +261,7 @@ describe('Socket', () => {
       client2Id = creatorResponse.data.participants[0];
 
     await client2.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem',
         workerId: client2Id,
@@ -297,14 +297,14 @@ describe('Socket', () => {
     runSockets(db, wss, pub, sub, logger, port);
 
     const creatorResponse = await client1.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem'
       }
     });
 
     await client2.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorResponse.data.user.scopeId,
@@ -330,14 +330,14 @@ describe('Socket', () => {
     runSockets(db, wss, pub, sub, logger, port);
 
     const creatorResponse = await client1.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem'
       }
     });
 
     await client2.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorResponse.data.user.scopeId,
@@ -346,7 +346,7 @@ describe('Socket', () => {
     });
 
     await client3.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorResponse.data.user.scopeId,
@@ -387,14 +387,14 @@ describe('Socket', () => {
     runSockets(db, wss, pub, sub, logger, port);
 
     const creatorResponse = await client1.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem'
       }
     });
 
     await client2.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem',
         scopeId: creatorResponse.data.user.scopeId,
@@ -434,7 +434,7 @@ describe('Socket', () => {
     // Check that wss is still operable.
     const client1 = new FakeClient(url);
     const creatorResponse = await client1.send({
-      type: GET_PLANS,
+      type: GET_PROTOCOL,
       data: {
         protocolId: 'multiple-millionaire-problem'
       }
