@@ -1,5 +1,5 @@
 // Define the port
-export const port = process.env.PORT || 3000;
+export const socketPort = process.env.PORT || 3000;
 
 // Define our Redis url
 export const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
@@ -12,3 +12,6 @@ export const mongoOptions = {
   useNewUrlParser: true,
   useUnifiedTopology: true
 };
+
+// Define the HTTP server port
+export const httpPort = process.env.HTTPPORT || socketPort + 1;

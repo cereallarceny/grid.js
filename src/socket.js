@@ -11,7 +11,7 @@ import { shortenId as s } from './_helpers';
 const uuid = require('uuid/v4');
 
 export default (db, wss, pub, sub, logger, port) => {
-  logger.log(`Server running on ${port} port, PID: ${process.pid}`);
+  logger.log(`Socker server running on port ${port}, PID: ${process.pid}`);
 
   // A helper function for sending information back to the client
   const send = (type, data, socket) =>
