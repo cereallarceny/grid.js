@@ -2,7 +2,7 @@ import { Logger } from 'syft.js';
 
 import { getProtocol } from '../src/protocols';
 import DBManager from './_db-manager';
-const {exampleProtocols, examplePlans} = require('../samples');
+const { exampleProtocols, examplePlans } = require('../samples');
 
 const uuid = require('uuid/v4');
 
