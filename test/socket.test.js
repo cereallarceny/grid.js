@@ -11,7 +11,7 @@ import Redis from 'redis-mock';
 
 import runSockets from '../src/socket';
 import DBManager from './_db-manager';
-import * as protocols from './data/test-protocols';
+const {exampleProtocols, examplePlans} = require('../samples');
 
 const NO_RESPONSE = 'no-response';
 
@@ -140,31 +140,8 @@ describe('Socket', () => {
   });
 
   beforeEach(async () => {
-    await db.collection('protocols').insertMany([
-      {
-        id: protocols.multi_millionaire_problem_protocol_id,
-        contents: protocols.multi_millionaire_problem_protocol
-      },
-      {
-        id: protocols.millionaire_problem_protocol_id,
-        contents: protocols.millionaire_problem_protocol
-      }
-    ]);
-
-    await db.collection('plans').insertMany([
-      {
-        id: protocols.millionaire_problem_plan1_id,
-        contents: protocols.millionaire_problem_plan1
-      },
-      {
-        id: protocols.millionaire_problem_plan2_id,
-        contents: protocols.millionaire_problem_plan2
-      },
-      {
-        id: protocols.millionaire_problem_plan3_id,
-        contents: protocols.millionaire_problem_plan3
-      }
-    ]);
+    await db.collection('protocols').insertMany(exampleProtocols);
+    await db.collection('plans').insertMany(examplePlans);
 
     wss = new MockServer(new Server(url));
   });
@@ -182,7 +159,7 @@ describe('Socket', () => {
 
     const message = await client.send({
       type: GET_PROTOCOL,
-      data: { protocolId: protocols.millionaire_problem_protocol_id }
+      data: { protocolId: exampleProtocols[0].id }
     });
 
     expect(client.messages.length).toBe(1);
@@ -193,14 +170,14 @@ describe('Socket', () => {
     expect(data.user.workerId).not.toBe(null);
     expect(data.user.scopeId).not.toBe(null);
     expect(data.user.protocolId).toBe(
-      protocols.millionaire_problem_protocol_id
+      exampleProtocols[0].id
     );
     expect(data.user.role).toBe('creator');
-    expect(data.plan).toBe(protocols.millionaire_problem_plan1);
-    expect(data.protocol).toBe(protocols.millionaire_problem_protocol);
-    expect(Object.keys(data.participants).length).toBe(1);
+    expect(data.plan).toBe(examplePlans[0].contents);
+    expect(data.protocol).toBe(exampleProtocols[0].contents);
+    expect(Object.keys(data.participants).length).toBe(examplePlans.length - 1);
     expect(Object.values(data.participants)).toStrictEqual([
-      protocols.millionaire_problem_plan2_worker
+      'assignment2', 'assignment3'
     ]);
   });
 
@@ -211,13 +188,13 @@ describe('Socket', () => {
 
     await client.send({
       type: GET_PROTOCOL,
-      data: { protocolId: protocols.millionaire_problem_protocol_id }
+      data: { protocolId: exampleProtocols[0].id }
     });
 
     const message2 = await client.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.millionaire_problem_protocol_id,
+        protocolId: exampleProtocols[0].id,
         workerId: Object.keys(client.messages[0].data.participants)[0],
         scopeId: client.messages[0].data.user.scopeId
       }
@@ -232,16 +209,14 @@ describe('Socket', () => {
     );
     expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
     expect(data.user.protocolId).toBe(
-      protocols.millionaire_problem_protocol_id
+      exampleProtocols[0].id
     );
     expect(data.user.role).toBe('participant');
     expect(data.user.plan).toBe(1);
-    expect(data.plan).toBe(protocols.millionaire_problem_plan2);
-    expect(data.protocol).toBe(protocols.millionaire_problem_protocol);
-    expect(Object.keys(data.participants).length).toBe(1);
-    expect(Object.values(data.participants)[0]).toBe(
-      protocols.millionaire_problem_plan1_worker
-    );
+    expect(data.plan).toBe(examplePlans[1].contents);
+    expect(data.protocol).toBe(exampleProtocols[0].contents);
+    expect(Object.keys(data.participants).length).toBe(examplePlans.length - 1);
+    expect(Object.values(data.participants)).toStrictEqual(['assignment1', 'assignment3']);
   });
 
   test('should not send response for ping message', async () => {
@@ -280,7 +255,7 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id
+        protocolId: exampleProtocols[0].id
       }
     });
 
@@ -291,7 +266,7 @@ describe('Socket', () => {
     await client2.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id,
+        protocolId: exampleProtocols[0].id,
         workerId: client2Id,
         scopeId
       }
@@ -327,14 +302,14 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id
+        protocolId: exampleProtocols[0].id
       }
     });
 
     await client2.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id,
+        protocolId: exampleProtocols[0].id,
         scopeId: creatorResponse.data.user.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[0]
       }
@@ -360,14 +335,14 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id
+        protocolId: exampleProtocols[0].id
       }
     });
 
     await client2.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id,
+        protocolId: exampleProtocols[0].id,
         scopeId: creatorResponse.data.user.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[0]
       }
@@ -376,7 +351,7 @@ describe('Socket', () => {
     await client3.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id,
+        protocolId: exampleProtocols[0].id,
         scopeId: creatorResponse.data.user.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[1]
       }
@@ -417,14 +392,14 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id
+        protocolId: exampleProtocols[0].id
       }
     });
 
     await client2.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id,
+        protocolId: exampleProtocols[0].id,
         scopeId: creatorResponse.data.user.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[0]
       }
@@ -464,7 +439,7 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: protocols.multi_millionaire_problem_protocol_id
+        protocolId: exampleProtocols[0].id
       }
     });
 

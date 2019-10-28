@@ -2,7 +2,7 @@ import { Logger } from 'syft.js';
 
 import { getProtocol } from '../src/protocols';
 import DBManager from './_db-manager';
-import * as protocols from './data/test-protocols';
+const {exampleProtocols, examplePlans} = require('../samples');
 
 const uuid = require('uuid/v4');
 
@@ -27,31 +27,8 @@ describe('Protocol', () => {
   });
 
   beforeEach(async () => {
-    await db.collection('protocols').insertMany([
-      {
-        id: protocols.multi_millionaire_problem_protocol_id,
-        contents: protocols.multi_millionaire_problem_protocol
-      },
-      {
-        id: protocols.millionaire_problem_protocol_id,
-        contents: protocols.millionaire_problem_protocol
-      }
-    ]);
-
-    await db.collection('plans').insertMany([
-      {
-        id: protocols.millionaire_problem_plan1_id,
-        contents: protocols.millionaire_problem_plan1
-      },
-      {
-        id: protocols.millionaire_problem_plan2_id,
-        contents: protocols.millionaire_problem_plan2
-      },
-      {
-        id: protocols.millionaire_problem_plan3_id,
-        contents: protocols.millionaire_problem_plan3
-      }
-    ]);
+    await db.collection('protocols').insertMany(exampleProtocols);
+    await db.collection('plans').insertMany(examplePlans);
   });
 
   afterEach(async () => {
@@ -77,7 +54,7 @@ describe('Protocol', () => {
       db,
       {
         workerId: uuid(),
-        protocolId: protocols.millionaire_problem_protocol_id
+        protocolId: exampleProtocols[0].id
       },
       logger
     );
@@ -85,18 +62,18 @@ describe('Protocol', () => {
       db,
       {
         workerId: Object.keys(creatorProtocolData.participants)[0],
-        protocolId: protocols.millionaire_problem_protocol_id,
+        protocolId: exampleProtocols[0].id,
         scopeId: creatorProtocolData.user.scopeId
       },
       logger
     );
 
     expect(creatorProtocolData.user.scopeId).not.toBe(null);
-    expect(Object.keys(creatorProtocolData.participants).length).toBe(1);
-    expect(creatorProtocolData.plan).toBe(protocols.millionaire_problem_plan1);
+    expect(Object.keys(creatorProtocolData.participants).length).toBe(2);
+    expect(creatorProtocolData.plan).toBe(examplePlans[0].contents);
     expect(getProtocolData.user.scopeId).toBe(creatorProtocolData.user.scopeId);
-    expect(getProtocolData.plan).toBe(protocols.millionaire_problem_plan2);
-    expect(Object.keys(getProtocolData.participants).length).toBe(1);
+    expect(getProtocolData.plan).toBe(examplePlans[1].contents);
+    expect(Object.keys(getProtocolData.participants).length).toBe(2);
   });
 
   test('should get data if a scopeId is supplied', async () => {
@@ -104,7 +81,7 @@ describe('Protocol', () => {
       db,
       {
         workerId: uuid(),
-        protocolId: protocols.multi_millionaire_problem_protocol_id
+        protocolId: exampleProtocols[0].id
       },
       logger
     );
@@ -112,17 +89,17 @@ describe('Protocol', () => {
       db,
       {
         workerId: Object.keys(creatorProtocolData.participants)[0],
-        protocolId: protocols.multi_millionaire_problem_protocol_id,
+        protocolId: exampleProtocols[0].id,
         scopeId: creatorProtocolData.user.scopeId
       },
       logger
     );
 
     expect(creatorProtocolData.user.scopeId).not.toBe(null);
-    expect(creatorProtocolData.plan).toBe(protocols.millionaire_problem_plan1);
+    expect(creatorProtocolData.plan).toBe(examplePlans[0].contents);
     expect(Object.keys(creatorProtocolData.participants).length).toBe(2);
     expect(getProtocolData.user.scopeId).toBe(creatorProtocolData.user.scopeId);
-    expect(getProtocolData.plan).toBe(protocols.millionaire_problem_plan2);
+    expect(getProtocolData.plan).toBe(examplePlans[1].contents);
     expect(Object.keys(getProtocolData.participants).length).toBe(2);
   });
 });

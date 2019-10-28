@@ -58,6 +58,6 @@ const plan = id => `
   None))
 `;
 
-module.exports.exampleProtocol = [detailToObject(protocol)];
+module.exports.exampleProtocols = [detailToObject(protocol)];
 
 module.exports.examplePlans = assignmentIds.map(i => detailToObject(plan(i)));

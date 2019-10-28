@@ -5,7 +5,7 @@ import { mongoOptions } from '../src/_constants';
 // Extend the default timeout so MongoDB binaries can download
 jest.setTimeout(60000);
 
-const COLLECTIONS = ['protocols', 'users'];
+const COLLECTIONS = ['protocols', 'plans', 'users'];
 
 export default class DBManager {
   constructor() {
