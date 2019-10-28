@@ -2,7 +2,7 @@ import { Logger } from 'syft.js';
 
 import { getProtocol } from '../src/protocols';
 import DBManager from './_db-manager';
-import * as protocols from './data/test-protocols'
+import * as protocols from './data/test-protocols';
 
 const uuid = require('uuid/v4');
 
@@ -50,7 +50,7 @@ describe('Protocol', () => {
       {
         id: protocols.millionaire_problem_plan3_id,
         contents: protocols.millionaire_problem_plan3
-      },
+      }
     ]);
   });
 
@@ -75,7 +75,10 @@ describe('Protocol', () => {
   test('should create a scope if one is not supplied', async () => {
     const creatorProtocolData = await getProtocol(
       db,
-      { workerId: uuid(), protocolId: protocols.millionaire_problem_protocol_id },
+      {
+        workerId: uuid(),
+        protocolId: protocols.millionaire_problem_protocol_id
+      },
       logger
     );
     const getProtocolData = await getProtocol(
@@ -99,8 +102,10 @@ describe('Protocol', () => {
   test('should get data if a scopeId is supplied', async () => {
     const creatorProtocolData = await getProtocol(
       db,
-      { workerId: uuid(),
-        protocolId: protocols.multi_millionaire_problem_protocol_id },
+      {
+        workerId: uuid(),
+        protocolId: protocols.multi_millionaire_problem_protocol_id
+      },
       logger
     );
     const getProtocolData = await getProtocol(

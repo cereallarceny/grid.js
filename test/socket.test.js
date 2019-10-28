@@ -163,7 +163,7 @@ describe('Socket', () => {
       {
         id: protocols.millionaire_problem_plan3_id,
         contents: protocols.millionaire_problem_plan3
-      },
+      }
     ]);
 
     wss = new MockServer(new Server(url));
@@ -192,12 +192,16 @@ describe('Socket', () => {
     expect(type).toBe(GET_PROTOCOL);
     expect(data.user.workerId).not.toBe(null);
     expect(data.user.scopeId).not.toBe(null);
-    expect(data.user.protocolId).toBe(protocols.millionaire_problem_protocol_id);
+    expect(data.user.protocolId).toBe(
+      protocols.millionaire_problem_protocol_id
+    );
     expect(data.user.role).toBe('creator');
     expect(data.plan).toBe(protocols.millionaire_problem_plan1);
     expect(data.protocol).toBe(protocols.millionaire_problem_protocol);
     expect(Object.keys(data.participants).length).toBe(1);
-    expect(Object.values(data.participants)).toStrictEqual([protocols.millionaire_problem_plan2_worker])
+    expect(Object.values(data.participants)).toStrictEqual([
+      protocols.millionaire_problem_plan2_worker
+    ]);
   });
 
   test('should get plans for a user with all their information', async () => {
@@ -223,15 +227,21 @@ describe('Socket', () => {
     const { type, data } = message2;
 
     expect(type).toBe(GET_PROTOCOL);
-    expect(data.user.workerId).toBe(Object.keys(client.messages[0].data.participants)[0]);
+    expect(data.user.workerId).toBe(
+      Object.keys(client.messages[0].data.participants)[0]
+    );
     expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
-    expect(data.user.protocolId).toBe(protocols.millionaire_problem_protocol_id);
+    expect(data.user.protocolId).toBe(
+      protocols.millionaire_problem_protocol_id
+    );
     expect(data.user.role).toBe('participant');
     expect(data.user.plan).toBe(1);
     expect(data.plan).toBe(protocols.millionaire_problem_plan2);
     expect(data.protocol).toBe(protocols.millionaire_problem_protocol);
     expect(Object.keys(data.participants).length).toBe(1);
-    expect(Object.values(data.participants)[0]).toBe(protocols.millionaire_problem_plan1_worker);
+    expect(Object.values(data.participants)[0]).toBe(
+      protocols.millionaire_problem_plan1_worker
+    );
   });
 
   test('should not send response for ping message', async () => {
