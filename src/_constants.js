@@ -14,4 +14,4 @@ export const mongoOptions = {
 };
 
 // Define the HTTP server port
-export const httpPort = process.env.HTTPPORT || socketPort + 1;
+export const httpPort = parseInt(process.env.HTTPPORT) || socketPort + 1;
