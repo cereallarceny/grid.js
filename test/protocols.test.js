@@ -2,6 +2,7 @@ import { Logger } from 'syft.js';
 
 import { getProtocol } from '../src/protocols';
 import DBManager from './_db-manager';
+import * as protocols from './data/test-protocols'
 
 const uuid = require('uuid/v4');
 
@@ -28,13 +29,28 @@ describe('Protocol', () => {
   beforeEach(async () => {
     await db.collection('protocols').insertMany([
       {
-        id: 'multiple-millionaire-problem',
-        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']]
+        id: protocols.multi_millionaire_problem_protocol_id,
+        contents: protocols.multi_millionaire_problem_protocol
       },
       {
-        id: 'millionaire-problem',
-        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
+        id: protocols.millionaire_problem_protocol_id,
+        contents: protocols.millionaire_problem_protocol
       }
+    ]);
+
+    await db.collection('plans').insertMany([
+      {
+        id: protocols.millionaire_problem_plan1_id,
+        contents: protocols.millionaire_problem_plan1
+      },
+      {
+        id: protocols.millionaire_problem_plan2_id,
+        contents: protocols.millionaire_problem_plan2
+      },
+      {
+        id: protocols.millionaire_problem_plan3_id,
+        contents: protocols.millionaire_problem_plan3
+      },
     ]);
   });
 
@@ -57,50 +73,51 @@ describe('Protocol', () => {
   });
 
   test('should create a scope if one is not supplied', async () => {
-    const creatorPlanData = await getProtocol(
+    const creatorProtocolData = await getProtocol(
       db,
-      { workerId: uuid(), protocolId: 'millionaire-problem' },
+      { workerId: uuid(), protocolId: protocols.millionaire_problem_protocol_id },
       logger
     );
-    const getPlanData = await getProtocol(
+    const getProtocolData = await getProtocol(
       db,
       {
-        workerId: creatorPlanData.participants[0],
-        protocolId: 'millionaire-problem',
-        scopeId: creatorPlanData.user.scopeId
+        workerId: Object.keys(creatorProtocolData.participants)[0],
+        protocolId: protocols.millionaire_problem_protocol_id,
+        scopeId: creatorProtocolData.user.scopeId
       },
       logger
     );
 
-    expect(creatorPlanData.user.scopeId).not.toBe(null);
-    expect(creatorPlanData.plans.length).toBe(3);
-    expect(creatorPlanData.participants.length).toBe(1);
-    expect(getPlanData.user.scopeId).toBe(creatorPlanData.user.scopeId);
-    expect(getPlanData.plans.length).toBe(3);
-    expect(getPlanData.participants.length).toBe(1);
+    expect(creatorProtocolData.user.scopeId).not.toBe(null);
+    expect(Object.keys(creatorProtocolData.participants).length).toBe(1);
+    expect(creatorProtocolData.plan).toBe(protocols.millionaire_problem_plan1);
+    expect(getProtocolData.user.scopeId).toBe(creatorProtocolData.user.scopeId);
+    expect(getProtocolData.plan).toBe(protocols.millionaire_problem_plan2);
+    expect(Object.keys(getProtocolData.participants).length).toBe(1);
   });
 
   test('should get data if a scopeId is supplied', async () => {
-    const creatorPlanData = await getProtocol(
+    const creatorProtocolData = await getProtocol(
       db,
-      { workerId: uuid(), protocolId: 'multiple-millionaire-problem' },
+      { workerId: uuid(),
+        protocolId: protocols.multi_millionaire_problem_protocol_id },
       logger
     );
-    const getPlanData = await getProtocol(
+    const getProtocolData = await getProtocol(
       db,
       {
-        workerId: creatorPlanData.participants[0],
-        protocolId: 'multiple-millionaire-problem',
-        scopeId: creatorPlanData.user.scopeId
+        workerId: Object.keys(creatorProtocolData.participants)[0],
+        protocolId: protocols.multi_millionaire_problem_protocol_id,
+        scopeId: creatorProtocolData.user.scopeId
       },
       logger
     );
 
-    expect(creatorPlanData.user.scopeId).not.toBe(null);
-    expect(creatorPlanData.plans.length).toBe(3);
-    expect(creatorPlanData.participants.length).toBe(2);
-    expect(getPlanData.user.scopeId).toBe(creatorPlanData.user.scopeId);
-    expect(getPlanData.plans.length).toBe(3);
-    expect(getPlanData.participants.length).toBe(2);
+    expect(creatorProtocolData.user.scopeId).not.toBe(null);
+    expect(creatorProtocolData.plan).toBe(protocols.millionaire_problem_plan1);
+    expect(Object.keys(creatorProtocolData.participants).length).toBe(2);
+    expect(getProtocolData.user.scopeId).toBe(creatorProtocolData.user.scopeId);
+    expect(getProtocolData.plan).toBe(protocols.millionaire_problem_plan2);
+    expect(Object.keys(getProtocolData.participants).length).toBe(2);
   });
 });

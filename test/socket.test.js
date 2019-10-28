@@ -11,6 +11,7 @@ import Redis from 'redis-mock';
 
 import runSockets from '../src/socket';
 import DBManager from './_db-manager';
+import * as protocols from './data/test-protocols';
 
 const NO_RESPONSE = 'no-response';
 
@@ -141,13 +142,28 @@ describe('Socket', () => {
   beforeEach(async () => {
     await db.collection('protocols').insertMany([
       {
-        id: 'multiple-millionaire-problem',
-        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']]
+        id: protocols.multi_millionaire_problem_protocol_id,
+        contents: protocols.multi_millionaire_problem_protocol
       },
       {
-        id: 'millionaire-problem',
-        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
+        id: protocols.millionaire_problem_protocol_id,
+        contents: protocols.millionaire_problem_protocol
       }
+    ]);
+
+    await db.collection('plans').insertMany([
+      {
+        id: protocols.millionaire_problem_plan1_id,
+        contents: protocols.millionaire_problem_plan1
+      },
+      {
+        id: protocols.millionaire_problem_plan2_id,
+        contents: protocols.millionaire_problem_plan2
+      },
+      {
+        id: protocols.millionaire_problem_plan3_id,
+        contents: protocols.millionaire_problem_plan3
+      },
     ]);
 
     wss = new MockServer(new Server(url));
@@ -166,7 +182,7 @@ describe('Socket', () => {
 
     const message = await client.send({
       type: GET_PROTOCOL,
-      data: { protocolId: 'millionaire-problem' }
+      data: { protocolId: protocols.millionaire_problem_protocol_id }
     });
 
     expect(client.messages.length).toBe(1);
@@ -176,11 +192,12 @@ describe('Socket', () => {
     expect(type).toBe(GET_PROTOCOL);
     expect(data.user.workerId).not.toBe(null);
     expect(data.user.scopeId).not.toBe(null);
-    expect(data.user.protocolId).toBe('millionaire-problem');
+    expect(data.user.protocolId).toBe(protocols.millionaire_problem_protocol_id);
     expect(data.user.role).toBe('creator');
-    expect(data.user.plan).toBe(0);
-    expect(data.plans.length).toBe(3);
-    expect(data.participants.length).toBe(1);
+    expect(data.plan).toBe(protocols.millionaire_problem_plan1);
+    expect(data.protocol).toBe(protocols.millionaire_problem_protocol);
+    expect(Object.keys(data.participants).length).toBe(1);
+    expect(Object.values(data.participants)).toStrictEqual([protocols.millionaire_problem_plan2_worker])
   });
 
   test('should get plans for a user with all their information', async () => {
@@ -190,14 +207,14 @@ describe('Socket', () => {
 
     await client.send({
       type: GET_PROTOCOL,
-      data: { protocolId: 'millionaire-problem' }
+      data: { protocolId: protocols.millionaire_problem_protocol_id }
     });
 
     const message2 = await client.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'millionaire-problem',
-        workerId: client.messages[0].data.participants[0],
+        protocolId: protocols.millionaire_problem_protocol_id,
+        workerId: Object.keys(client.messages[0].data.participants)[0],
         scopeId: client.messages[0].data.user.scopeId
       }
     });
@@ -206,14 +223,15 @@ describe('Socket', () => {
     const { type, data } = message2;
 
     expect(type).toBe(GET_PROTOCOL);
-    expect(data.user.workerId).toBe(client.messages[0].data.participants[0]);
+    expect(data.user.workerId).toBe(Object.keys(client.messages[0].data.participants)[0]);
     expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
-    expect(data.user.protocolId).toBe('millionaire-problem');
+    expect(data.user.protocolId).toBe(protocols.millionaire_problem_protocol_id);
     expect(data.user.role).toBe('participant');
     expect(data.user.plan).toBe(1);
-    expect(data.plans.length).toBe(3);
-    expect(data.participants.length).toBe(1);
-    expect(data.participants[0]).toBe(client.messages[0].data.user.workerId);
+    expect(data.plan).toBe(protocols.millionaire_problem_plan2);
+    expect(data.protocol).toBe(protocols.millionaire_problem_protocol);
+    expect(Object.keys(data.participants).length).toBe(1);
+    expect(Object.values(data.participants)[0]).toBe(protocols.millionaire_problem_plan1_worker);
   });
 
   test('should not send response for ping message', async () => {
@@ -252,18 +270,18 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem'
+        protocolId: protocols.multi_millionaire_problem_protocol_id
       }
     });
 
     const scopeId = creatorResponse.data.user.scopeId,
       client1Id = creatorResponse.data.user.workerId,
-      client2Id = creatorResponse.data.participants[0];
+      client2Id = Object.keys(creatorResponse.data.participants)[0];
 
     await client2.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem',
+        protocolId: protocols.multi_millionaire_problem_protocol_id,
         workerId: client2Id,
         scopeId
       }
@@ -299,16 +317,16 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem'
+        protocolId: protocols.multi_millionaire_problem_protocol_id
       }
     });
 
     await client2.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem',
+        protocolId: protocols.multi_millionaire_problem_protocol_id,
         scopeId: creatorResponse.data.user.scopeId,
-        workerId: creatorResponse.data.participants[0]
+        workerId: Object.keys(creatorResponse.data.participants)[0]
       }
     });
 
@@ -332,25 +350,25 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem'
+        protocolId: protocols.multi_millionaire_problem_protocol_id
       }
     });
 
     await client2.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem',
+        protocolId: protocols.multi_millionaire_problem_protocol_id,
         scopeId: creatorResponse.data.user.scopeId,
-        workerId: creatorResponse.data.participants[0]
+        workerId: Object.keys(creatorResponse.data.participants)[0]
       }
     });
 
     await client3.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem',
+        protocolId: protocols.multi_millionaire_problem_protocol_id,
         scopeId: creatorResponse.data.user.scopeId,
-        workerId: creatorResponse.data.participants[1]
+        workerId: Object.keys(creatorResponse.data.participants)[1]
       }
     });
 
@@ -358,8 +376,8 @@ describe('Socket', () => {
       data: { somekey: 'somedata' },
       scopeId: creatorResponse.data.user.scopeId,
       // From client3 to client2.
-      workerId: creatorResponse.data.participants[1],
-      to: creatorResponse.data.participants[0],
+      workerId: Object.keys(creatorResponse.data.participants)[1],
+      to: Object.keys(creatorResponse.data.participants)[0],
       type: 'offer'
     };
 
@@ -389,16 +407,16 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem'
+        protocolId: protocols.multi_millionaire_problem_protocol_id
       }
     });
 
     await client2.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem',
+        protocolId: protocols.multi_millionaire_problem_protocol_id,
         scopeId: creatorResponse.data.user.scopeId,
-        workerId: creatorResponse.data.participants[0]
+        workerId: Object.keys(creatorResponse.data.participants)[0]
       }
     });
 
@@ -406,7 +424,7 @@ describe('Socket', () => {
       type: 'weird-type',
       data: {
         scopeId: creatorResponse.data.user.scopeId,
-        workerId: creatorResponse.data.participants[0]
+        workerId: Object.keys(creatorResponse.data.participants)[0]
       }
     };
 
@@ -436,7 +454,7 @@ describe('Socket', () => {
     const creatorResponse = await client1.send({
       type: GET_PROTOCOL,
       data: {
-        protocolId: 'multiple-millionaire-problem'
+        protocolId: protocols.multi_millionaire_problem_protocol_id
       }
     });
 
