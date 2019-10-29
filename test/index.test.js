@@ -30,15 +30,19 @@ describe('Grid', () => {
     process.env.PORT = '3003';
     process.env.MONGODB_URI = mongoUrl;
     process.env.REDIS_URL = '';
+    const httpPort = parseInt(process.env.PORT) + 1;
 
     const index = require('../src/index.js');
 
     // Give it some time to initialize.
     await new Promise(done => setTimeout(done, 200));
 
-    expect(loggerSpy.mock.calls).toHaveLength(1);
+    expect(loggerSpy.mock.calls).toHaveLength(2);
     expect(loggerSpy.mock.calls[0][0]).toContain(
-      `Server running on ${process.env.PORT} port`
+      `Socket server running on port ${process.env.PORT}`
+    );
+    expect(loggerSpy.mock.calls[1][0]).toContain(
+      `HTTP server running on port ${httpPort}`
     );
 
     process.env = { ...oldEnv };

@@ -11,7 +11,7 @@ const detailToObject = text => {
 
 const assignmentIds = ['37163364537', '70249651082', '81654059278'];
 
-const protocol = `
+const protocol1 = `
 (24,
  (18797824900,
   None,
@@ -20,6 +20,17 @@ const protocol = `
    ((6, ((5, (b'assignment1',)), ${assignmentIds[0]})),
     (6, ((5, (b'assignment2',)), ${assignmentIds[1]})),
     (6, ((5, (b'assignment3',)), ${assignmentIds[2]})))),
+  False))
+`;
+
+const protocol2 = `
+(24,
+ (18797824901,
+  None,
+  None,
+  (1,
+   ((6, ((5, (b'assignment1',)), ${assignmentIds[0]})),
+    (6, ((5, (b'assignment2',)), ${assignmentIds[1]})))),
   False))
 `;
 
@@ -58,6 +69,9 @@ const plan = id => `
   None))
 `;
 
-module.exports.exampleProtocol = [detailToObject(protocol)];
+module.exports.exampleProtocols = [
+  detailToObject(protocol1),
+  detailToObject(protocol2)
+];
 
 module.exports.examplePlans = assignmentIds.map(i => detailToObject(plan(i)));
