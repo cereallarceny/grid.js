@@ -25,7 +25,8 @@ At this point you'll have a socket server running locally on the port of your sp
 - Full support for ES5/6/7 via Babel 7 (feel free to write in the newer Javascript syntax)
 - Prettier running in the background (all code contributed should be syntatically identical from developer to developer - [feel free to install the plugin for the editor of your choice](https://prettier.io/)).
 
-[Click here](SOCKETS.md) to view socket endpoint documentation.
+[Click here](SOCKETS.md) to view socket endpoint documentation.<br />
+[Click here](HTTP.md) to view HTTP endpoint documentation.
 
 ## Deployment
 
