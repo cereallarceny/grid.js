@@ -159,7 +159,7 @@ describe('Socket', () => {
 
     const message = await client.send({
       type: GET_PROTOCOL,
-      data: { protocolId: exampleProtocols[0].id }
+      data: { protocolId: exampleProtocols[1].id }
     });
 
     expect(client.messages.length).toBe(1);
@@ -169,14 +169,13 @@ describe('Socket', () => {
     expect(type).toBe(GET_PROTOCOL);
     expect(data.user.workerId).not.toBe(null);
     expect(data.user.scopeId).not.toBe(null);
-    expect(data.user.protocolId).toBe(exampleProtocols[0].id);
+    expect(data.user.protocolId).toBe(exampleProtocols[1].id);
     expect(data.user.role).toBe('creator');
     expect(data.plan).toBe(examplePlans[0].contents);
-    expect(data.protocol).toBe(exampleProtocols[0].contents);
-    expect(Object.keys(data.participants).length).toBe(examplePlans.length - 1);
+    expect(data.protocol).toBe(exampleProtocols[1].contents);
+    expect(Object.keys(data.participants).length).toBe(1);
     expect(Object.values(data.participants)).toStrictEqual([
-      'assignment2',
-      'assignment3'
+      'assignment2'
     ]);
   });
 
