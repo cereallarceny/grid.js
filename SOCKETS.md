@@ -38,9 +38,9 @@ The `socket-ping` message is intended as a keep-alive to ensure the connection t
 
 None
 
-### `get-plans`
+### `get-protocol`
 
-The `get-plans` message is complicated in that many steps are done internally within grid.js to ensure an identical response. Currently there's no implicit "authentication" protocol within grid.js, but if the request doesn't match exactly what is inside the database, you will not receive any response.
+The `get-protocol` message is complicated in that many steps are done internally within grid.js to ensure an identical response. Currently there's no implicit "authentication" system within grid.js, but if the request doesn't match exactly what is inside the database, you will not receive any response.
 
 First, a few terms:
 
@@ -51,27 +51,29 @@ Now, for the general algorithm of how plans are generated or found, and eventual
 
 1. If the client has not specified an `workerId` in their request, generate one for them.
 2. Do a lookup to find the requested protocol based on the `protocolId`.
-3. If a `scopeId` was not specified in the request, we assume that the client desires to create a new scope. In this case, we must designate the requesting client as the "creator" of that scope. Likewise, we must also generate and store the information of the other participants. The number of additional participants to be created depends on the number of lists of plans inside the protocol (_i.e. for a protocol with 3 lists of plans, 2 other users will be created_). In grid.js, a client is structured as such in the database:
+3. If a `scopeId` was not specified in the request, we assume that the client desires to create a new scope. In this case, we must designate the requesting client as the "creator" of that scope. Likewise, we must also generate and store the information of the other participants. The number of additional participants to be created depends on the number of plan assignments inside the protocol (_i.e. for a protocol with 3 assignments, 2 other users (other than the creator) will be created_). In grid.js, a client is structured as such in the database:
 
    ```js
    {
      workerId: '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed',
      scopeId: 'f0be538d-e185-47cc-ac68-27ec26088ba6',
      protocolId: 'millionaire-problem',
-     role: 'creator', // Or "participant"
-     plan: 0  // Always an integer, speicifying which array index in the list of plans they are assigned to
+     role: 'creator',  // Or "participant"
+     plan: 0,  // Always an integer, speicifying which array index in the list of plans they are assigned to
+     assignment: 'assignment-1'  // The name of the assignment, allowing us to map the appropriate plan assignment
    }
    ```
 
-   In grid.js, the creator of the scope is always assigned the 0th list of plans in the protocol.
+   In grid.js, the creator of the scope is always assigned the 0th plan in the protocol (and thus, the 0th assignment).
 
-4. Find the list of plans in the protocol that the client is responsible for. This will be an array of strings.
+4. Find the plan in the protocol that the client is responsible for. This will be a giant Serde simplified string.
 5. Once we have generated or retieved all the clients in the scope, we send the response to the client which includes a JSON object with three keys:
    - `user` - all of their client information
-   - `plans` - a list of plans (an array of strings) for the client in string form (Serde will parse these within syft.js)
-   - `participants` - a list of the `workerId`'s (an array of strings) of each of the other participants (not including the client themselves)
+   - `protocol` - the protocol the user requested (returned in a Serde simplified string)
+   - `plan` - the plan that the user is assigned to (returned in a Serde simplified string)
+   - `participants` - an object mapping the `workerId`'s of each of the users to their respective assignments (so that each user knows what `workerId` has what `assignment`)
 
-**Note:** If this workflow is at all still confusing, [it's suggested you read through the plans.js file](./src/plans.js) to see exactly what is happening internally. Note that it presumes the presence of an `workerId` and a `protocolId`, but not a `scopeId`.
+**Note:** If this workflow is at all still confusing, [it's suggested you read through the protocol.js file](./src/protocol.js) to see exactly what is happening internally. Note that it presumes the presence of an `workerId` and a `protocolId`, but not a `scopeId`.
 
 #### Request<br />
 
@@ -79,7 +81,7 @@ If you want to create a new scope:
 
 ```json
 {
-  "type": "get-plans",
+  "type": "get-protocol",
   "data": {
     "protocolId": "millionaire-problem"
   }
@@ -90,7 +92,7 @@ If you want to join an existing scope (even as the original creator of that scop
 
 ```json
 {
-  "type": "get-plans",
+  "type": "get-protocol",
   "data": {
     "workerId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
     "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6",
@@ -101,22 +103,26 @@ If you want to join an existing scope (even as the original creator of that scop
 
 #### Response
 
+**Note:** The `protocol` and `plan` return below is too long (an arbitrary) to be included below. They have thus been replaced as `SIMPLIFIED_PROTOCOL` and `SIMPLIFIED_PLAN` respectively. Simply understand that each of these represent a Serde simplified string of the protocol and assigned plan.
+
 ```json
 {
-  "type": "get-plans",
+  "type": "get-protocol",
   "data": {
     "user": {
       "workerId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
       "scopeId": "f0be538d-e185-47cc-ac68-27ec26088ba6",
       "protocolId": "millionaire-problem",
       "role": "creator",
-      "plan": 0
+      "plan": 0,
+      "assignment": "assignment-1"
     },
-    "plans": ["PYSYFT OPERATION", "PYSYFT OPERATION", "PYSYFT OPERATION"],
-    "participants": [
-      "5b06f42e-ee96-43e6-a6e7-e24f5a21268b",
-      "e64130ae-b044-4cd7-b1fe-623cec3fb8e8"
-    ]
+    "protocol": SIMPLIFIED_PROTOCOL,
+    "plan": SIMPLIFIED_PLAN,
+    "participants": {
+      "5b06f42e-ee96-43e6-a6e7-e24f5a21268b": "assignment-2",
+      "e64130ae-b044-4cd7-b1fe-623cec3fb8e8": "assignment-3"
+    }
   }
 }
 ```
