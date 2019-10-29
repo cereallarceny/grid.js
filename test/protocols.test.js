@@ -2,6 +2,7 @@ import { Logger } from 'syft.js';
 
 import { getProtocol } from '../src/protocols';
 import DBManager from './_db-manager';
+const { exampleProtocols, examplePlans } = require('../samples');
 
 const uuid = require('uuid/v4');
 
@@ -26,16 +27,8 @@ describe('Protocol', () => {
   });
 
   beforeEach(async () => {
-    await db.collection('protocols').insertMany([
-      {
-        id: 'multiple-millionaire-problem',
-        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']]
-      },
-      {
-        id: 'millionaire-problem',
-        plans: [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
-      }
-    ]);
+    await db.collection('protocols').insertMany(exampleProtocols);
+    await db.collection('plans').insertMany(examplePlans);
   });
 
   afterEach(async () => {
@@ -57,50 +50,56 @@ describe('Protocol', () => {
   });
 
   test('should create a scope if one is not supplied', async () => {
-    const creatorPlanData = await getProtocol(
-      db,
-      { workerId: uuid(), protocolId: 'millionaire-problem' },
-      logger
-    );
-    const getPlanData = await getProtocol(
+    const creatorProtocolData = await getProtocol(
       db,
       {
-        workerId: creatorPlanData.participants[0],
-        protocolId: 'millionaire-problem',
-        scopeId: creatorPlanData.user.scopeId
+        workerId: uuid(),
+        protocolId: exampleProtocols[0].id
+      },
+      logger
+    );
+    const getProtocolData = await getProtocol(
+      db,
+      {
+        workerId: Object.keys(creatorProtocolData.participants)[0],
+        protocolId: exampleProtocols[0].id,
+        scopeId: creatorProtocolData.user.scopeId
       },
       logger
     );
 
-    expect(creatorPlanData.user.scopeId).not.toBe(null);
-    expect(creatorPlanData.plans.length).toBe(3);
-    expect(creatorPlanData.participants.length).toBe(1);
-    expect(getPlanData.user.scopeId).toBe(creatorPlanData.user.scopeId);
-    expect(getPlanData.plans.length).toBe(3);
-    expect(getPlanData.participants.length).toBe(1);
+    expect(creatorProtocolData.user.scopeId).not.toBe(null);
+    expect(Object.keys(creatorProtocolData.participants).length).toBe(2);
+    expect(creatorProtocolData.plan).toBe(examplePlans[0].contents);
+    expect(getProtocolData.user.scopeId).toBe(creatorProtocolData.user.scopeId);
+    expect(getProtocolData.plan).toBe(examplePlans[1].contents);
+    expect(Object.keys(getProtocolData.participants).length).toBe(2);
   });
 
   test('should get data if a scopeId is supplied', async () => {
-    const creatorPlanData = await getProtocol(
-      db,
-      { workerId: uuid(), protocolId: 'multiple-millionaire-problem' },
-      logger
-    );
-    const getPlanData = await getProtocol(
+    const creatorProtocolData = await getProtocol(
       db,
       {
-        workerId: creatorPlanData.participants[0],
-        protocolId: 'multiple-millionaire-problem',
-        scopeId: creatorPlanData.user.scopeId
+        workerId: uuid(),
+        protocolId: exampleProtocols[0].id
+      },
+      logger
+    );
+    const getProtocolData = await getProtocol(
+      db,
+      {
+        workerId: Object.keys(creatorProtocolData.participants)[0],
+        protocolId: exampleProtocols[0].id,
+        scopeId: creatorProtocolData.user.scopeId
       },
       logger
     );
 
-    expect(creatorPlanData.user.scopeId).not.toBe(null);
-    expect(creatorPlanData.plans.length).toBe(3);
-    expect(creatorPlanData.participants.length).toBe(2);
-    expect(getPlanData.user.scopeId).toBe(creatorPlanData.user.scopeId);
-    expect(getPlanData.plans.length).toBe(3);
-    expect(getPlanData.participants.length).toBe(2);
+    expect(creatorProtocolData.user.scopeId).not.toBe(null);
+    expect(creatorProtocolData.plan).toBe(examplePlans[0].contents);
+    expect(Object.keys(creatorProtocolData.participants).length).toBe(2);
+    expect(getProtocolData.user.scopeId).toBe(creatorProtocolData.user.scopeId);
+    expect(getProtocolData.plan).toBe(examplePlans[1].contents);
+    expect(Object.keys(getProtocolData.participants).length).toBe(2);
   });
 });

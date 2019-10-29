@@ -4,18 +4,20 @@ import url from 'url';
 import { detail } from 'syft.js';
 
 export default (db, logger, port) => {
-  http
+  return http
     .createServer((req, res) => {
-      const { pathname } = url.parse(req.url, true);
+      const { pathname, query } = url.parse(req.url, true);
 
-      if (pathname == '/protocols') {
+      if (pathname === '/protocols') {
         if (req.method === 'POST') insert('protocols', req, res, db);
         else if (req.method === 'PUT') update('protocols', req, res, db);
-        else if (req.method === 'DELETE') remove('protocols', req, res, db);
-      } else if (pathname == '/plans') {
+        else if (req.method === 'DELETE' && query.id) remove('protocols', query.id, req, res, db);
+        else handleInvalid(req, res);
+      } else if (pathname === '/plans') {
         if (req.method === 'POST') insert('plans', req, res, db);
         else if (req.method === 'PUT') update('plans', req, res, db);
-        else if (req.method === 'DELETE') remove('plans', req, res, db);
+        else if (req.method === 'DELETE' && query.id) remove('plans', query.id, req, res, db);
+        else handleInvalid(req, res);
       } else {
         handleInvalid(req, res);
       }
@@ -33,7 +35,8 @@ const composeResponse = (req, res, callback) => {
   });
 
   req.on('end', async () => {
-    const response = await callback(JSON.parse(body));
+    const data = body.length > 0 ? JSON.parse(body) : null;
+    const response = await callback(data);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
@@ -47,7 +50,7 @@ const insert = (collection, req, res, db) => {
 
     await db
       .collection(collection)
-      .insertOne({ id: detailed.id, contents: data });
+      .insertOne({ id: detailed.id.toString(), contents: data });
 
     return {
       success: `Successfully added ${collection.slice(0, -1)} ${detailed.id}`
@@ -62,8 +65,8 @@ const update = (collection, req, res, db) => {
     await db
       .collection(collection)
       .updateOne(
-        { id: detailed.id },
-        { $set: { id: detailed.id, contents: data } },
+        { id: detailed.id.toString() },
+        { $set: { id: detailed.id.toString(), contents: data } },
         { upsert: true }
       );
 
@@ -73,8 +76,8 @@ const update = (collection, req, res, db) => {
   });
 };
 
-const remove = (collection, req, res, db) => {
-  composeResponse(req, res, async ({ id }) => {
+const remove = (collection, id, req, res, db) => {
+  composeResponse(req, res, async () => {
     await db.collection(collection).deleteOne({ id });
 
     return {
