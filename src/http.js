@@ -9,14 +9,14 @@ export default (db, logger, port) => {
       const { pathname, query } = url.parse(req.url, true);
 
       if (pathname === '/protocols') {
-        if (req.method === 'POST') insert('protocols', req, res, db);
-        else if (req.method === 'PUT') update('protocols', req, res, db);
-        else if (req.method === 'DELETE' && query.id) remove('protocols', query.id, req, res, db);
+        if (req.method === 'POST') insert('protocols', req, res, db); // prettier-ignore
+        else if (req.method === 'PUT') update('protocols', req, res, db); // prettier-ignore
+        else if (req.method === 'DELETE' && query.id) remove('protocols', query.id, req, res, db); // prettier-ignore
         else handleInvalid(req, res);
       } else if (pathname === '/plans') {
-        if (req.method === 'POST') insert('plans', req, res, db);
-        else if (req.method === 'PUT') update('plans', req, res, db);
-        else if (req.method === 'DELETE' && query.id) remove('plans', query.id, req, res, db);
+        if (req.method === 'POST') insert('plans', req, res, db); // prettier-ignore
+        else if (req.method === 'PUT') update('plans', req, res, db); // prettier-ignore
+        else if (req.method === 'DELETE' && query.id) remove('plans', query.id, req, res, db); // prettier-ignore
         else handleInvalid(req, res);
       } else {
         handleInvalid(req, res);

@@ -103,8 +103,6 @@ If you want to join an existing scope (even as the original creator of that scop
 
 #### Response
 
-**Note:** The `protocol` and `plan` return below is too long (an arbitrary) to be included below. They have thus been replaced as `SIMPLIFIED_PROTOCOL` and `SIMPLIFIED_PLAN` respectively. Simply understand that each of these represent a Serde simplified string of the protocol and assigned plan.
-
 ```json
 {
   "type": "get-protocol",
@@ -117,8 +115,47 @@ If you want to join an existing scope (even as the original creator of that scop
       "plan": 0,
       "assignment": "assignment-1"
     },
-    "protocol": SIMPLIFIED_PROTOCOL,
-    "plan": SIMPLIFIED_PLAN,
+    "protocol": "(24,\n
+      (18797824900,\n
+        None,\n
+        None,\n
+        (1,\n
+        ((6, ((5, (b'assignment1',)), 12345)),\n
+          (6, ((5, (b'assignment2',)), 67890)),\n
+          (6, ((5, (b'assignment3',)), 13579)))),\n
+        False))",
+    "plan": "(21,\n
+      (12345,\n
+      (23,\n
+        ((6,\n
+          ((33,\n
+            (1,\n
+              ((6,\n
+                ((5, (b'abs')),\n
+                (25, (25208484331, 51684948173, (5, (b'dan')), None, (11, (1,)), True)),\n
+                (6, ()),\n
+                (0, ()))),\n
+              (1, (62869536441,))))),\n
+          (33,\n
+            (1,\n
+              ((6,\n
+                ((5, (b'__add__')),\n
+                (25, (9655331350, 62869536441, (5, (b'dan')), None, None, True)),\n
+                (6,\n
+                  ((25, (89426198911, 4863941835, (5, (b'dan')), None, (11, (1,)), False)),)),\n
+                (0, ()))),\n
+              (1, (3263650475,))))))),\n
+        (6, (51684948173,)),\n
+        (6, (3263650475,)))),\n
+      (22,\n
+        ((1, (4863941835,)),\n
+        (1,\n
+          ((14, (4863941835, (5,(b'somethinghere')), None, None, None, None)),)))),\n
+      True,\n
+      True,\n
+      (5, (b'plan')),\n
+      None,\n
+      None))",
     "participants": {
       "5b06f42e-ee96-43e6-a6e7-e24f5a21268b": "assignment-2",
       "e64130ae-b044-4cd7-b1fe-623cec3fb8e8": "assignment-3"
