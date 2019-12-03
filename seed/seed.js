@@ -12,7 +12,7 @@ function seedDB() {
 
   Object.keys(seedData).forEach(index => {
     fs.writeFile(
-      `seeds/${index}.json`,
+      `tmp/${index}.json`,
       JSON.stringify(seedData[index]),
       'utf8',
       () => console.log(`Seed file \"${index}\" created.`)
