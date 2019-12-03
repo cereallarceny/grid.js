@@ -16,7 +16,7 @@ A Node API sitting between PySyft/syft.js on the server and syft.js on the clien
 1. Install Redis to your computer and have it running in the background ([using Homebrew](https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8))
 2. [Install and run MongoDB locally](https://docs.mongodb.com/manual/installation/)
 3. `npm install`
-4. `npm run seed` (if you want to have a sample protocol put into the database)
+4. `npm run seed` (for more information, please see the [seeding section below](#seeding))
 5. `npm start`
 
 At this point you'll have a socket server running locally on the port of your specification (defaults to 3000). This project includes:
@@ -27,6 +27,20 @@ At this point you'll have a socket server running locally on the port of your sp
 
 [Click here](SOCKETS.md) to view socket endpoint documentation.<br />
 [Click here](HTTP.md) to view HTTP endpoint documentation.
+
+## Seeding
+
+If you want to seed some sample protocols and plans in your database, you'll need to create these yourself. If you have PySyft installed to this computer, you can simply run `npm run create-seed`. The NPM script presumes that your `pysyft` and `grid.js` directories are located in the same folder, like such:
+
+- ...
+- grid.js
+- pysyft
+- syft.js
+- ...
+
+If you'd like to run this script and have pysyft located somewhere else, you can run the shell script directly and pass your path like such: `./create-seed.sh ../../path/to/pysyft/`.
+
+It's important to note that this will create seed files based on the **current branch of your local PySyft installation**. If you want to create a seed file of a different PySyft branch, you're welcome to do so.
 
 ## Deployment
 

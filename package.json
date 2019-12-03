@@ -9,7 +9,8 @@
     "serve": "node dist/index.js",
     "test": "jest --coverage --maxWorkers 4",
     "test:watch": "jest --watch",
-    "seed": "./run-seed.sh"
+    "seed": "./run-seed.sh",
+    "create-seed": "./create-seed.sh ../pysyft"
   },
   "engines": {
     "node": "10.16.3"
