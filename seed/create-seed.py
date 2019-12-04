@@ -17,9 +17,10 @@ def generateThreeWayProtocol(me):
     #     z = th.abs(y)
     #     return z.send(alice)
 
-    @sy.func2plan(args_shape=[(1,)])
-    def bobPlan(x):
-        y = x + x
+    @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2])))
+    def bobPlan(x, state):
+        bias = state.read()
+        y = x + bias
         z = th.abs(y)
         return z
 
@@ -57,9 +58,10 @@ def generateThreeWayProtocol(me):
     }
 
 def generateTwoWayProtocol(me):
-    @sy.func2plan(args_shape=[(1,)])
-    def jasonPlan(x):
-        y = x + x
+    @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2])))
+    def jasonPlan(x, state):
+        bias = state.read()
+        y = x + bias
         z = th.abs(y)
         return z
 
@@ -87,6 +89,8 @@ def generateTwoWayProtocol(me):
     }
 
 sy.create_sandbox(globals(), download_data=False)
+hook.local_worker.is_client_worker = False
+hook.local_worker.framework = None
 me = hook.local_worker
 
 first = generateThreeWayProtocol(me)
@@ -94,8 +98,7 @@ second = generateTwoWayProtocol(me)
 data = { "three-way": first, "two-way": second }
 
 print(data)
-
-print("Seed file created successfully!")
+print("\n\n----------\n\nSeed file created successfully!")
 
 with open('./seed/data.json', 'w', encoding='utf-8') as f:
     json.dump(data, f)
