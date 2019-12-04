@@ -4,22 +4,9 @@ import syft as sy
 import torch as th
 
 def generateThreeWayProtocol(me):
-    # @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2])))
-    # def bobPlan(x, state):
-    #     bias = state.read()
-    #     y = th.abs(x)
-    #     z = y + bias
-    #     return z.send(theo)
-
-    # @sy.func2plan(args_shape=[(1,)])
-    # def theoPlan(x):
-    #     y = x + x
-    #     z = th.abs(y)
-    #     return z.send(alice)
-
     @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2])))
     def bobPlan(x, state):
-        bias = state.read()
+        bias, = state.read()
         y = x + bias
         z = th.abs(y)
         return z
@@ -60,7 +47,7 @@ def generateThreeWayProtocol(me):
 def generateTwoWayProtocol(me):
     @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2])))
     def jasonPlan(x, state):
-        bias = state.read()
+        bias, = state.read()
         y = x + bias
         z = th.abs(y)
         return z
@@ -98,7 +85,7 @@ second = generateTwoWayProtocol(me)
 data = { "three-way": first, "two-way": second }
 
 print(data)
-print("\n\n----------\n\nSeed file created successfully!")
+print("\n----------\n\nSeed file created successfully!")
 
 with open('./seed/data.json', 'w', encoding='utf-8') as f:
     json.dump(data, f)
