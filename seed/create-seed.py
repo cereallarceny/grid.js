@@ -4,7 +4,7 @@ import syft as sy
 import torch as th
 
 def generateThreeWayProtocol(me):
-    @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2])))
+    @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2, 7.3]), ))
     def bobPlan(x, state):
         bias, = state.read()
         y = x + bias
@@ -45,7 +45,7 @@ def generateThreeWayProtocol(me):
     }
 
 def generateTwoWayProtocol(me):
-    @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2])))
+    @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2, 7.3]), ))
     def jasonPlan(x, state):
         bias, = state.read()
         y = x + bias
