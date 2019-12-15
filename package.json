@@ -31,6 +31,8 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.5.5",
+    "bcrypt": "^3.0.7",
+    "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.3.1",
     "redis": "^2.8.0",
     "syft.js": "git+https://github.com/openmined/syft.js.git",
