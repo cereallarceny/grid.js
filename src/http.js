@@ -1,7 +1,6 @@
+import { detail } from 'syft.js';
 import http from 'http';
 import url from 'url';
-
-import { detail } from 'syft.js';
 
 export default (db, logger, port) => {
   return http
