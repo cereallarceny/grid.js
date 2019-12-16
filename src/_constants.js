@@ -18,4 +18,4 @@ export const httpPort = parseInt(process.env.HTTPPORT) || socketPort + 1;
 
 // JWT
 export const jwtSecret = process.env.JWT_SECRET || 'my-jwt-secret';
-export const jwtExpiry = process.env.JWT_EXPIRY || 86400;
+export const jwtExpiry = process.env.JWT_EXPIRY || 86400; // 24 hours
