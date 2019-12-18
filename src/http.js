@@ -1,9 +1,9 @@
 import { ForbiddenError, UnauthorizedError } from './errors';
+import { authorize, jwtSign, jwtVerify } from './auth';
 
 import bcrypt from 'bcrypt';
 import { detail } from 'syft.js';
 import http from 'http';
-import { jwtSign } from './auth';
 import url from 'url';
 
 export default (db, logger, port) => {
@@ -33,15 +33,22 @@ export default (db, logger, port) => {
     });
 };
 
-const handleRequest = (req, res, next, ...args) => {
+const handleRequest = async (req, res, next, db, ...args) => {
   const { pathname, _ } = url.parse(req.url, true);
 
-  if (pathname !== '/token') {
-    // Authorize
-  }
+  try {
+    if (pathname !== '/token') {
+      // Check authorization header for JWT token
+      await authorize(req, db);
+    }
 
-  // Compose the response
-  composeResponse(req, res, next, ...args);
+    // Compose the response
+    composeResponse(req, res, next, db, ...args);
+  } catch (error) {
+    res.statusCode = error.statusCode || 401;
+
+    res.end(JSON.stringify({ error: error.message || 'Invalid request' }));
+  }
 };
 
 const composeResponse = (req, res, next, ...args) => {
