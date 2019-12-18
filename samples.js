@@ -1,11 +1,18 @@
 const { detail } = require('syft.js');
+const uuid = require('uuid/v4');
+const bcrypt = require('bcrypt');
+
+// Admin user credentials
+const adminPassword = process.env.ADMIN_PASSWORD || 'admin-password';
+const adminUserId = uuid();
 
 const detailToObject = text => {
   const detailedObject = detail(text);
 
   return {
     id: detailedObject.id.toString(),
-    contents: text
+    contents: text,
+    userId: adminUserId
   };
 };
 
@@ -69,9 +76,20 @@ const plan = id => `
   None))
 `;
 
-module.exports.exampleProtocols = [
-  detailToObject(protocol1),
-  detailToObject(protocol2)
+const exampleProtocols = [detailToObject(protocol1), detailToObject(protocol2)];
+
+const examplePlans = assignmentIds.map(i => detailToObject(plan(i)));
+
+const exampleUsers = [
+  {
+    id: adminUserId,
+    name: 'admin',
+    password: bcrypt.hashSync(adminPassword, 10) //auto-gen a salt and hash with 10 rounds - https://www.npmjs.com/package/bcrypt
+  }
 ];
 
-module.exports.examplePlans = assignmentIds.map(i => detailToObject(plan(i)));
+module.exports = {
+  exampleProtocols,
+  examplePlans,
+  exampleUsers
+};

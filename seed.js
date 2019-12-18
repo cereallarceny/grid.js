@@ -1,13 +1,13 @@
 const fs = require('fs');
 
-const { exampleProtocols, examplePlans } = require('./samples');
+const { exampleProtocols, examplePlans, exampleUsers } = require('./samples');
 
 // A simple function we can run to seed the database
 function seedDB() {
   const seedData = {
     protocols: exampleProtocols,
     plans: examplePlans,
-    users: [{}]
+    users: exampleUsers
   };
 
   Object.keys(seedData).forEach(index => {
