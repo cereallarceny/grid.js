@@ -18,3 +18,5 @@ export const jwtVerify = token => {
 
   return decoded;
 };
+
+export const authorize = () => {};
