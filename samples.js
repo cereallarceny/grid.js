@@ -83,7 +83,7 @@ const examplePlans = assignmentIds.map(i => detailToObject(plan(i)));
 const exampleUsers = [
   {
     id: adminUserId,
-    name: 'admin',
+    username: 'admin',
     password: bcrypt.hashSync(adminPassword, 10) //auto-gen a salt and hash with 10 rounds - https://www.npmjs.com/package/bcrypt
   }
 ];

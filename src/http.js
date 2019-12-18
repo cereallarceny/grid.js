@@ -1,5 +1,7 @@
+import bcrypt from 'bcrypt';
 import { detail } from 'syft.js';
 import http from 'http';
+import { jwtSign } from './auth';
 import url from 'url';
 
 export default (db, logger, port) => {
@@ -16,6 +18,9 @@ export default (db, logger, port) => {
         if (req.method === 'POST') insert('plans', req, res, db); // prettier-ignore
         else if (req.method === 'PUT') update('plans', req, res, db); // prettier-ignore
         else if (req.method === 'DELETE' && query.id) remove('plans', query.id, req, res, db); // prettier-ignore
+        else handleInvalid(req, res);
+      } else if (pathname === '/token') {
+        if (req.method === 'POST') getToken(req, res, db); // prettier-ignore
         else handleInvalid(req, res);
       } else {
         handleInvalid(req, res);
@@ -89,4 +94,21 @@ const handleInvalid = (req, res) => {
   res.statusCode = 404;
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify({ error: 'Invalid request' }));
+};
+
+const getToken = (req, res, db) => {
+  composeResponse(req, res, async data => {
+    const user = await db
+      .collection('users')
+      .findOne({ username: data.username });
+
+    const isPasswordValid = bcrypt.compareSync(data.password, user.password);
+    if (!isPasswordValid) {
+      return {};
+    }
+
+    return {
+      token: jwtSign({ id: user.id })
+    };
+  });
 };
