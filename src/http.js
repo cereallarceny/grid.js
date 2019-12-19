@@ -102,8 +102,7 @@ const update = async (req, res, data, db, collection) => {
     .collection(collection)
     .updateOne(
       { id: detailed.id.toString(), createdBy: req.user.id },
-      { $set: { id: detailed.id.toString(), contents: data.data } },
-      { upsert: true }
+      { $set: { id: detailed.id.toString(), contents: data.data } }
     );
 
   return {
