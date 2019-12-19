@@ -1,5 +1,5 @@
-import { ForbiddenError, UnauthorizedError } from './errors';
-import { authorize, jwtSign, jwtVerify } from './auth';
+import { CredentialsDidNotMatchError, NotFoundError } from './errors';
+import { authorize, jwtSign } from './auth';
 
 import bcrypt from 'bcrypt';
 import { detail } from 'syft.js';
@@ -15,17 +15,17 @@ export default (db, logger, port) => {
         if (req.method === 'POST') handleRequest(req, res, insert,  db, 'protocols'); // prettier-ignore
         else if (req.method === 'PUT') handleRequest(req, res, update,  db, 'protocols'); // prettier-ignore
         else if (req.method === 'DELETE' && query.id) handleRequest(req, res, remove,  db, 'protocols'); // prettier-ignore
-        else handleInvalid(req, res);
+        else handleInvalidRequest(req, res);
       } else if (pathname === '/plans') {
         if (req.method === 'POST') handleRequest(req, res, insert,  db, 'plans'); // prettier-ignore
         else if (req.method === 'PUT') handleRequest(req, res, update,  db, 'plans'); // prettier-ignore
         else if (req.method === 'DELETE' && query.id) handleRequest(req, res, remove,  db, 'plans'); // prettier-ignore
-        else handleInvalid(req, res);
+        else handleInvalidRequest(req, res);
       } else if (pathname === '/token') {
         if (req.method === 'POST') handleRequest(req, res, getToken, db); // prettier-ignore
-        else handleInvalid(req, res);
+        else handleInvalidRequest(req, res);
       } else {
-        handleInvalid(req, res);
+        handleInvalidRequest(req, res);
       }
     })
     .listen(port, () => {
@@ -84,9 +84,11 @@ const composeResponse = (req, res, next, ...args) => {
 const insert = async (req, res, data, db, collection) => {
   const detailed = detail(data.data);
 
-  await db
-    .collection(collection)
-    .insertOne({ id: detailed.id.toString(), contents: data.data });
+  await db.collection(collection).insertOne({
+    id: detailed.id.toString(),
+    contents: data.data,
+    createdBy: req.user.id
+  });
 
   return {
     success: `Successfully added ${collection.slice(0, -1)} ${detailed.id}`
@@ -99,7 +101,7 @@ const update = async (req, res, data, db, collection) => {
   await db
     .collection(collection)
     .updateOne(
-      { id: detailed.id.toString() },
+      { id: detailed.id.toString(), createdBy: req.user.id },
       { $set: { id: detailed.id.toString(), contents: data.data } },
       { upsert: true }
     );
@@ -110,17 +112,23 @@ const update = async (req, res, data, db, collection) => {
 };
 
 const remove = async (req, res, data, db, collection) => {
-  await db.collection(collection).deleteOne({ id: data.id });
+  const result = await db
+    .collection(collection)
+    .deleteOne({ id: data.id, createdBy: req.user.id });
+
+  if (result.deletedCount === 0) {
+    throw new NotFoundError();
+  }
 
   return {
     success: `Successfully removed ${collection.slice(0, -1)} ${data.id}`
   };
 };
 
-const handleInvalid = (req, res) => {
-  res.statusCode = 404;
+const handleInvalidRequest = (req, res) => {
+  res.statusCode = 405;
   res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify({ error: 'Invalid request' }));
+  res.end(JSON.stringify({ error: 'Method Not Allowed' }));
 };
 
 const getToken = async (req, res, data, db) => {
@@ -128,9 +136,14 @@ const getToken = async (req, res, data, db) => {
     .collection('users')
     .findOne({ username: data.username });
 
+  if (!user) {
+    throw new CredentialsDidNotMatchError();
+  }
+
+  // Authenticate
   const isPasswordValid = bcrypt.compareSync(data.password, user.password);
   if (!isPasswordValid) {
-    return {};
+    throw new CredentialsDidNotMatchError();
   }
 
   return {

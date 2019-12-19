@@ -56,4 +56,7 @@ export const authorize = async (req, db) => {
   if (!userExists) {
     throw new ForbiddenError();
   }
+
+  // Add authorized user object to the request
+  req.user = { id: decoded.id };
 };

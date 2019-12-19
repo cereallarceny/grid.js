@@ -16,6 +16,15 @@ export class ForbiddenError extends Error {
   }
 }
 
+export class CredentialsDidNotMatchError extends Error {
+  constructor(...args) {
+    super(...args);
+    Error.captureStackTrace(this, CredentialsDidNotMatchError);
+    this.statusCode = 401;
+    this.message = 'Username or password is wrong';
+  }
+}
+
 export class NotFoundError extends Error {
   constructor(...args) {
     super(...args);

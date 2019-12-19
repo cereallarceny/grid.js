@@ -12,7 +12,7 @@ const detailToObject = text => {
   return {
     id: detailedObject.id.toString(),
     contents: text,
-    userId: adminUserId
+    createdBy: adminUserId
   };
 };
 
