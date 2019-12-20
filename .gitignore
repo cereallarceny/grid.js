@@ -3,5 +3,5 @@ coverage
 dist
 .DS_Store
 yarn.lock
-seeds
 .idea
+tmp

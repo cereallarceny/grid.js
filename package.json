@@ -9,7 +9,8 @@
     "serve": "node dist/index.js",
     "test": "jest --coverage --maxWorkers 4",
     "test:watch": "jest --watch",
-    "seed": "./run-seed.sh"
+    "seed": "./seed/run-seed.sh",
+    "create-seed": "python ./seed/create-seed.py"
   },
   "engines": {
     "node": "10.16.3"
