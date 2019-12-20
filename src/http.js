@@ -154,6 +154,6 @@ const getToken = async (req, res, data, db) => {
   return {
     token: jwtSign({ id: user.id }),
     username: data.username,
-    id: user.id
+    userId: user.id
   };
 };
