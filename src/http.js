@@ -9,23 +9,23 @@ import url from 'url';
 export default (db, logger, port) => {
   return http
     .createServer((req, res) => {
-      const { pathname, query } = url.parse(req.url, true);
+      const { pathname, _ } = url.parse(req.url, true);
 
       if (pathname === '/protocols') {
         if (req.method === 'POST') handleRequest(req, res, insert,  db, 'protocols'); // prettier-ignore
         else if (req.method === 'PUT') handleRequest(req, res, update,  db, 'protocols'); // prettier-ignore
-        else if (req.method === 'DELETE' && query.id) handleRequest(req, res, remove,  db, 'protocols'); // prettier-ignore
-        else handleInvalidRequest(req, res);
+        else if (req.method === 'DELETE') handleRequest(req, res, remove,  db, 'protocols'); // prettier-ignore
+        else handleInvalidMethod(req, res);
       } else if (pathname === '/plans') {
         if (req.method === 'POST') handleRequest(req, res, insert,  db, 'plans'); // prettier-ignore
         else if (req.method === 'PUT') handleRequest(req, res, update,  db, 'plans'); // prettier-ignore
-        else if (req.method === 'DELETE' && query.id) handleRequest(req, res, remove,  db, 'plans'); // prettier-ignore
-        else handleInvalidRequest(req, res);
+        else if (req.method === 'DELETE') handleRequest(req, res, remove,  db, 'plans'); // prettier-ignore
+        else handleInvalidMethod(req, res);
       } else if (pathname === '/token') {
         if (req.method === 'POST') handleRequest(req, res, getToken, db); // prettier-ignore
-        else handleInvalidRequest(req, res);
+        else handleInvalidMethod(req, res);
       } else {
-        handleInvalidRequest(req, res);
+        handleInvalidUrl(req, res);
       }
     })
     .listen(port, () => {
@@ -124,10 +124,16 @@ const remove = async (req, res, data, db, collection) => {
   };
 };
 
-const handleInvalidRequest = (req, res) => {
+const handleInvalidMethod = (req, res) => {
   res.statusCode = 405;
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+};
+
+const handleInvalidUrl = (req, res) => {
+  res.statusCode = 404;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ error: 'Not Found' }));
 };
 
 const getToken = async (req, res, data, db) => {
