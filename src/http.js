@@ -141,7 +141,7 @@ const getToken = async (req, res, data, db) => {
     .collection('users')
     .findOne({ username: data.username });
 
-  if (!user) {
+  if (!user || !data.password) {
     throw new CredentialsDidNotMatchError();
   }
 
@@ -152,6 +152,8 @@ const getToken = async (req, res, data, db) => {
   }
 
   return {
-    token: jwtSign({ id: user.id })
+    token: jwtSign({ id: user.id }),
+    username: data.username,
+    id: user.id
   };
 };

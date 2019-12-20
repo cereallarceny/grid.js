@@ -278,4 +278,56 @@ describe('HTTP Server', () => {
       await db.collection('plans').findOne({ id: examplePlans[0].id })
     ).toBe(null);
   });
+
+  test('should be able get token', async () => {
+    let response = await request(
+      '/token',
+      { method: 'POST' },
+      { username: testUsername, password: testUserPassword }
+    );
+
+    expect(response.body.token).not.toBe(null);
+    expect(response.body.username).toBe(testUsername);
+
+    // Request without username.
+    response = await request(
+      `/token`,
+      { method: 'POST' },
+      { password: testUserPassword }
+    );
+
+    expect(response.statusCode).toBe(401);
+
+    // Request without password.
+    response = await request(
+      `/token`,
+      { method: 'POST' },
+      { username: testUsername }
+    );
+
+    expect(response.statusCode).toBe(401);
+
+    // Request without username and password.
+    response = await request(`/token`, { method: 'POST' }, {});
+
+    expect(response.statusCode).toBe(401);
+
+    // Request with wrong username.
+    response = await request(
+      `/token`,
+      { method: 'POST' },
+      { username: 'test1234' }
+    );
+
+    expect(response.statusCode).toBe(401);
+
+    // Request with wrong password.
+    response = await request(
+      `/token`,
+      { method: 'POST' },
+      { username: testUsername, password: 'something-else' }
+    );
+
+    expect(response.statusCode).toBe(401);
+  });
 });
