@@ -51,7 +51,7 @@ const handleRequest = async (req, res, next, db, ...args) => {
   }
 };
 
-const composeResponse = (req, res, next, ...args) => {
+const composeResponse = (req, res, next, db, ...args) => {
   let body = '';
 
   req.on('data', chunk => {
@@ -68,7 +68,7 @@ const composeResponse = (req, res, next, ...args) => {
     res.setHeader('Content-Type', 'application/json');
 
     try {
-      const response = await next(req, res, data, ...args);
+      const response = await next(req, res, data, db, ...args);
 
       res.statusCode = 200;
 
