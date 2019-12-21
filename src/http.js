@@ -9,7 +9,7 @@ import url from 'url';
 export default (db, logger, port) => {
   return http
     .createServer((req, res) => {
-      const { pathname, _ } = url.parse(req.url, true);
+      const { pathname } = url.parse(req.url, true);
 
       if (pathname === '/protocols') {
         if (req.method === 'POST') handleRequest(req, res, insert,  db, 'protocols'); // prettier-ignore
@@ -34,7 +34,7 @@ export default (db, logger, port) => {
 };
 
 const handleRequest = async (req, res, next, db, ...args) => {
-  const { pathname, _ } = url.parse(req.url, true);
+  const { pathname } = url.parse(req.url, true);
 
   try {
     if (pathname !== '/token') {
@@ -59,7 +59,7 @@ const composeResponse = (req, res, next, ...args) => {
   });
 
   req.on('end', async () => {
-    const { _, query } = url.parse(req.url, true);
+    const { query } = url.parse(req.url, true);
     let data = body.length > 0 ? JSON.parse(body) : {};
 
     // Append query string data, data sent in the body have the highest preference

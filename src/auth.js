@@ -1,23 +1,18 @@
 import { ForbiddenError, UnauthorizedError } from './errors';
 import { jwtExpiry, jwtSecret } from './_constants';
 
-// import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 // Sign the payload with JWT secret
 export const jwtSign = payload => {
-  const token = jwt.sign(payload, jwtSecret, {
+  return jwt.sign(payload, jwtSecret, {
     expiresIn: jwtExpiry
   });
-
-  return token;
 };
 
 // Verify the JWT token and get the decoded payload
 export const jwtVerify = token => {
-  const decoded = jwt.verify(token, jwtSecret);
-
-  return decoded;
+  return jwt.verify(token, jwtSecret);
 };
 
 export const authorize = async (req, db) => {
@@ -35,7 +30,6 @@ export const authorize = async (req, db) => {
     throw new UnauthorizedError();
   }
 
-  // const decoded = jwtVerify(token);
   let decoded;
   try {
     decoded = jwtVerify(token);

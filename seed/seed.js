@@ -7,7 +7,8 @@ function seedDB() {
   const seedData = {
     protocols: exampleProtocols,
     plans: examplePlans,
-    users: exampleUsers
+    users: exampleUsers,
+    workers: [{}]
   };
 
   Object.keys(seedData).forEach(index => {

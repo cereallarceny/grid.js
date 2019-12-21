@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const data = require('./data.json');
 
 // Admin user credentials
+const adminUsername = process.env.ADMIN_USERNAME || 'admin';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin-password';
 const adminUserId = uuid();
 
@@ -40,7 +41,7 @@ const examplePlans = [
 const exampleUsers = [
   {
     id: adminUserId,
-    username: 'admin',
+    username: adminUsername,
     password: bcrypt.hashSync(adminPassword, 10) //auto-gen a salt and hash with 10 rounds - https://www.npmjs.com/package/bcrypt
   }
 ];
