@@ -171,10 +171,10 @@ describe('Socket', () => {
     expect(data.worker.scopeId).not.toBe(null);
     expect(data.worker.protocolId).toBe(exampleProtocols[1].id);
     expect(data.worker.role).toBe('creator');
-    expect(data.plan).toBe(examplePlans[0].contents);
+    expect(data.plan).toBe(examplePlans[3].contents);
     expect(data.protocol).toBe(exampleProtocols[1].contents);
     expect(Object.keys(data.participants).length).toBe(1);
-    expect(Object.values(data.participants)).toStrictEqual(['assignment2']);
+    expect(Object.values(data.participants)).toStrictEqual(['worker2']);
   });
 
   test('should get plans for a worker with all their information', async () => {
@@ -209,10 +209,10 @@ describe('Socket', () => {
     expect(data.worker.plan).toBe(1);
     expect(data.plan).toBe(examplePlans[1].contents);
     expect(data.protocol).toBe(exampleProtocols[0].contents);
-    expect(Object.keys(data.participants).length).toBe(examplePlans.length - 1);
+    expect(Object.keys(data.participants).length).toBe(2);
     expect(Object.values(data.participants)).toStrictEqual([
-      'assignment1',
-      'assignment3'
+      'worker1',
+      'worker3'
     ]);
   });
 

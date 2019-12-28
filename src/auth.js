@@ -4,16 +4,13 @@ import { jwtExpiry, jwtSecret } from './_constants';
 import jwt from 'jsonwebtoken';
 
 // Sign the payload with JWT secret
-export const jwtSign = payload => {
-  return jwt.sign(payload, jwtSecret, {
+export const jwtSign = payload =>
+  jwt.sign(payload, jwtSecret, {
     expiresIn: jwtExpiry
   });
-};
 
 // Verify the JWT token and get the decoded payload
-export const jwtVerify = token => {
-  return jwt.verify(token, jwtSecret);
-};
+export const jwtVerify = token => jwt.verify(token, jwtSecret);
 
 export const authorize = async (req, db) => {
   const authHeader = req.headers['authorization'];
