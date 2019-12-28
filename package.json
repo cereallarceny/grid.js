@@ -1,6 +1,6 @@
 {
-  "name": "grid.js",
-  "version": "0.0.1",
+  "name": "@openmined/grid.js",
+  "version": "0.0.0",
   "description": "A Node socket API supporting syft.js workers in the browser",
   "main": "src/index.js",
   "scripts": {
