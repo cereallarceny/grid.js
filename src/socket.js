@@ -1,11 +1,12 @@
-import { getProtocol } from './protocols';
 import {
-  WEBRTC_JOIN_ROOM,
-  WEBRTC_INTERNAL_MESSAGE,
-  WEBRTC_PEER_LEFT,
   GET_PROTOCOL,
-  SOCKET_PING
+  SOCKET_PING,
+  WEBRTC_INTERNAL_MESSAGE,
+  WEBRTC_JOIN_ROOM,
+  WEBRTC_PEER_LEFT
 } from 'syft.js';
+
+import { getProtocol } from './protocols';
 import { shortenId as s } from './_helpers';
 
 const uuid = require('uuid/v4');
@@ -27,7 +28,7 @@ export default (db, wss, pub, sub, logger, port) => {
     );
 
     logger.log(
-      `Sending message (${type}) from user ${s(workerId)} to room ${s(
+      `Sending message (${type}) from worker ${s(workerId)} to room ${s(
         scopeId
       )} (${participants.length} other participant${
         participants.length !== 1 ? 's' : ''
@@ -48,7 +49,7 @@ export default (db, wss, pub, sub, logger, port) => {
     )[0];
 
     logger.log(
-      `Sending message (${type}) from user ${s(workerId)} to user ${s(to)}`
+      `Sending message (${type}) from worker ${s(workerId)} to worker ${s(to)}`
     );
 
     if (client) send(type, data, client);
@@ -66,7 +67,7 @@ export default (db, wss, pub, sub, logger, port) => {
         logger.log(`Received message (${type}) on WS`);
       }
 
-      // If the user is asking for information on a plan, they're kicking off their participation
+      // If the worker is asking for information on a plan, they're kicking off their participation
       if (type === GET_PROTOCOL) {
         // If they don't yet have an workerId, let's give them one
         if (!data.workerId) {
@@ -79,17 +80,17 @@ export default (db, wss, pub, sub, logger, port) => {
 
           // On the WebSocket object, save the workerId and scopeId
           ws.workerId = data.workerId;
-          ws.scopeId = protocolData.user.scopeId;
+          ws.scopeId = protocolData.worker.scopeId;
 
           logger.log(
             `Sending protocol and plan assignment to ${s(ws.workerId)}`
           );
 
-          // Send the user their requested data
+          // Send the worker their requested data
           send(GET_PROTOCOL, { ...protocolData }, ws);
         } catch (error) {
           logger.log(
-            `Could not get protocol for user ${s(data.workerId)}`,
+            `Could not get protocol for worker ${s(data.workerId)}`,
             error
           );
         }
@@ -107,7 +108,7 @@ export default (db, wss, pub, sub, logger, port) => {
         scopeId: ws.scopeId
       };
 
-      logger.log(`Closed connection to user ${s(ws.workerId)}`);
+      logger.log(`Closed connection to worker ${s(ws.workerId)}`);
 
       // Publish the message to Redis to let the other participants know
       pub.publish(WEBRTC_PEER_LEFT, JSON.stringify(data));

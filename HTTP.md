@@ -8,6 +8,35 @@ We've added a few HTTP endpoints to allow a grid.js administrator to upload prot
 
 **Note:** Please note that the HTTP server runs on the same server as the socket server, however, the HTTP server runs on a different port. You can specify which port the HTTP server should run at by specifying the `HTTPPORT` environment variable. If you do not specify one, it will automatically start at 1 port higher than the socket server (i.e. socket server is running 5678, HTTP server is running on 5679). The default socket server port is 3000, thus the default HTTP server port is 3001.
 
+### Get token - `POST /token`
+
+Get JWT token by passing username and password
+
+#### Request
+
+Endpoint: `POST /token`
+
+Body:
+
+```json
+{
+  "username": "admin",
+  "password": "admin-password"
+}
+```
+
+#### Response
+
+Successful response (HTTP code 200):
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYwZjA5OTZhLWIxYTAtNDE0Yy04MDQyLWM0NWVlZDE0MmQ1YiIsImlhdCI6MTU3Njg1NTA0MSwiZXhwIjoxNTc2OTQxNDQxfQ.zcCzkvvhNKL2AhFH_0rP51L6welbFS6jG-IMcbIIww4",
+  "username": "admin",
+  "userId": "f0f0996a-b1a0-414c-8042-c45eed142d5b"
+}
+```
+
 ### Add a protocol - `POST /protocols`
 
 This endpoint adds a new protocol to the system. You must supply a JSON body containing the Serde simplified string contents of the protocol generated in PySyft. The body must contain a single key (`data`) with the contents.
@@ -15,6 +44,14 @@ This endpoint adds a new protocol to the system. You must supply a JSON body con
 #### Request
 
 Endpoint: `POST /protocols`
+
+Header:
+
+```json
+{
+  "authorization": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYwZjA5OTZhLWIxYTAtNDE0Yy04MDQyLWM0NWVlZDE0MmQ1YiIsImlhdCI6MTU3Njg1NTA0MSwiZXhwIjoxNTc2OTQxNDQxfQ.zcCzkvvhNKL2AhFH_0rP51L6welbFS6jG-IMcbIIww4"
+}
+```
 
 Body:
 
@@ -52,6 +89,14 @@ This endpoint updates an existing protocol in the system. You must supply a JSON
 
 Endpoint: `PUT /protocols`
 
+Header:
+
+```json
+{
+  "authorization": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYwZjA5OTZhLWIxYTAtNDE0Yy04MDQyLWM0NWVlZDE0MmQ1YiIsImlhdCI6MTU3Njg1NTA0MSwiZXhwIjoxNTc2OTQxNDQxfQ.zcCzkvvhNKL2AhFH_0rP51L6welbFS6jG-IMcbIIww4"
+}
+```
+
 Body:
 
 ```json
@@ -84,7 +129,15 @@ This endpoint removes a protocol from the system. You must supply the ID of the 
 
 #### Request
 
-Endpoint: `DELETE /protocols/:id`
+Endpoint: `DELETE /protocols?id={protocolId}`
+
+Header:
+
+```json
+{
+  "authorization": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYwZjA5OTZhLWIxYTAtNDE0Yy04MDQyLWM0NWVlZDE0MmQ1YiIsImlhdCI6MTU3Njg1NTA0MSwiZXhwIjoxNTc2OTQxNDQxfQ.zcCzkvvhNKL2AhFH_0rP51L6welbFS6jG-IMcbIIww4"
+}
+```
 
 #### Response
 
@@ -103,6 +156,14 @@ This endpoint adds a new plan to the system. You must supply a JSON body contain
 #### Request
 
 Endpoint: `POST /plans`
+
+Header:
+
+```json
+{
+  "authorization": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYwZjA5OTZhLWIxYTAtNDE0Yy04MDQyLWM0NWVlZDE0MmQ1YiIsImlhdCI6MTU3Njg1NTA0MSwiZXhwIjoxNTc2OTQxNDQxfQ.zcCzkvvhNKL2AhFH_0rP51L6welbFS6jG-IMcbIIww4"
+}
+```
 
 Body:
 
@@ -163,6 +224,14 @@ This endpoint updates an existing plan in the system. You must supply a JSON bod
 
 Endpoint: `PUT /plans`
 
+Header:
+
+```json
+{
+  "authorization": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYwZjA5OTZhLWIxYTAtNDE0Yy04MDQyLWM0NWVlZDE0MmQ1YiIsImlhdCI6MTU3Njg1NTA0MSwiZXhwIjoxNTc2OTQxNDQxfQ.zcCzkvvhNKL2AhFH_0rP51L6welbFS6jG-IMcbIIww4"
+}
+```
+
 Body:
 
 ```json
@@ -218,7 +287,15 @@ This endpoint removes a plan from the system. You must supply the ID of the plan
 
 #### Request
 
-Endpoint: `DELETE /plans/:id`
+Endpoint: `DELETE /plans?id={planId}`
+
+Header:
+
+```json
+{
+  "authorization": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYwZjA5OTZhLWIxYTAtNDE0Yy04MDQyLWM0NWVlZDE0MmQ1YiIsImlhdCI6MTU3Njg1NTA0MSwiZXhwIjoxNTc2OTQxNDQxfQ.zcCzkvvhNKL2AhFH_0rP51L6welbFS6jG-IMcbIIww4"
+}
+```
 
 #### Response
 

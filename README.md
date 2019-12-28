@@ -32,6 +32,8 @@ At this point you'll have a socket server running locally on the port of your sp
 
 If you want to seed some sample protocols and plans in your database, you'll need to create these yourself. If you have PySyft installed to upir computer, you can simply run `npm run create-seed`. The NPM script presumes that you have PySyft installed somewhere on your machine and accessible from within a Python file. If you don't, [get PySyft up and running locally](https://github.com/OpenMined/PySyft/).
 
+Add `ADMIN_USERNAME` and `ADMIN_PASSWORD` env varible to set the admin username and password while seeding.
+
 It's important to note that this will create seed files based on the **current branch of your local PySyft installation**. If you want to create a seed file of a different PySyft branch, you're welcome to do so.
 
 ## Deployment

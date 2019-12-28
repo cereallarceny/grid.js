@@ -3,7 +3,7 @@ import { shortenId as s } from './_helpers';
 
 const uuid = require('uuid/v4');
 
-// Get the protocol the user is requesting
+// Get the protocol the worker is requesting
 // If they also pass a scopeId, they must be a participant
 export const getProtocol = async (
   db,
@@ -15,7 +15,7 @@ export const getProtocol = async (
   // Create an empty participants list which we will populate later
   const participants = [];
 
-  // Get the protocol of that user
+  // Get the protocol of that worker
   const protocol = await db.collection('protocols').findOne({ id: protocolId });
   if (!protocol) throw new Error(`Cannot find protocol ${protocolId}`);
   else logger.log(`Found protocol ${protocolId}`);
@@ -33,8 +33,8 @@ export const getProtocol = async (
     // Assign the creator the 0th plan
     const creatorPlanIndex = 0;
 
-    // Add the user creating this new scope to the database and designate their role as "creator"
-    await db.collection('users').insertOne({
+    // Add the worker creating this new scope to the database and designate their role as "creator"
+    await db.collection('workers').insertOne({
       workerId,
       protocolId,
       scopeId,
@@ -43,11 +43,11 @@ export const getProtocol = async (
       assignment: detailedProtocol.plans[creatorPlanIndex][0]
     });
 
-    logger.log(`Created new creator user ${s(workerId)}`);
+    logger.log(`Created new creator worker ${s(workerId)}`);
 
     // Create all the other participants (detailedProtocol.plans.length - 1 since the first is the scope creator)
     [...Array(detailedProtocol.plans.length - 1)].forEach((_, i) => {
-      // For each user create an id and push them onto the participants list
+      // For each worker create an id and push them onto the participants list
       const participantId = uuid();
 
       // Each participant will get a plan greater than the 0th plan
@@ -64,47 +64,47 @@ export const getProtocol = async (
       });
     });
 
-    // Put those participants in the users database
-    await db.collection('users').insertMany(participants);
+    // Put those participants in the workers database
+    await db.collection('workers').insertMany(participants);
 
     logger.log(
-      `Created ${participants.length} new participant user${
+      `Created ${participants.length} new participant worker${
         participants.length !== 1 ? 's' : ''
       } for scope ${s(scopeId)}`
     );
   }
 
-  // Get the user
-  const user = await db
-    .collection('users')
+  // Get the worker
+  const worker = await db
+    .collection('workers')
     .findOne({ workerId, scopeId, protocolId });
 
-  if (user)
+  if (worker)
     logger.log(
-      `Found ${user.role} user ${s(workerId)} with scope ${s(scopeId)}`
+      `Found ${worker.role} worker ${s(workerId)} with scope ${s(scopeId)}`
     );
 
-  // Get the user's assigned plan
+  // Get the worker's assigned plan
   const plan = await db
     .collection('plans')
-    .findOne({ id: detailedProtocol.plans[user.plan][1].toString() });
+    .findOne({ id: detailedProtocol.plans[worker.plan][1].toString() });
 
   if (plan)
     logger.log(
       `Found plan ${detailedProtocol.plans[
-        user.plan
-      ][1].toString()} for user ${s(workerId)}`
+        worker.plan
+      ][1].toString()} for worker ${s(workerId)}`
     );
 
   // If we didn't just create the scope, make sure we always return the list of other participants
   if (participants.length === 0) {
     const otherParticipants = await db
-      .collection('users')
+      .collection('workers')
       .find({ scopeId, protocolId })
       .toArray();
 
     logger.log(
-      `Found ${otherParticipants.length - 1} other participant user${
+      `Found ${otherParticipants.length - 1} other participant worker${
         otherParticipants.length - 1 !== 1 ? 's' : ''
       } with scope ${s(scopeId)}`
     );
@@ -116,16 +116,16 @@ export const getProtocol = async (
     });
   }
 
-  // Create a map between each other user's workerId and their assignment
+  // Create a map between each other worker's workerId and their assignment
   const participantAssigments = {};
 
   participants.forEach(({ workerId, assignment }) => {
     participantAssigments[workerId] = assignment;
   });
 
-  // Return the user, their assigned scopeId (passed to us or freshly created), their protocol, their plan, and the list of other participants
+  // Return the worker, their assigned scopeId (passed to us or freshly created), their protocol, their plan, and the list of other participants
   return {
-    user,
+    worker,
     protocol: protocol.contents,
     plan: plan.contents,
     participants: participantAssigments

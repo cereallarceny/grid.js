@@ -1,25 +1,31 @@
+import { CredentialsDidNotMatchError, NotFoundError } from './errors';
+import { authorize, jwtSign } from './auth';
+
+import bcrypt from 'bcrypt';
+import { detail } from 'syft.js';
 import http from 'http';
 import url from 'url';
-
-import { detail } from 'syft.js';
 
 export default (db, logger, port) => {
   return http
     .createServer((req, res) => {
-      const { pathname, query } = url.parse(req.url, true);
+      const { pathname } = url.parse(req.url, true);
 
       if (pathname === '/protocols') {
-        if (req.method === 'POST') insert('protocols', req, res, db); // prettier-ignore
-        else if (req.method === 'PUT') update('protocols', req, res, db); // prettier-ignore
-        else if (req.method === 'DELETE' && query.id) remove('protocols', query.id, req, res, db); // prettier-ignore
-        else handleInvalid(req, res);
+        if (req.method === 'POST') handleRequest(req, res, insert,  db, 'protocols'); // prettier-ignore
+        else if (req.method === 'PUT') handleRequest(req, res, update,  db, 'protocols'); // prettier-ignore
+        else if (req.method === 'DELETE') handleRequest(req, res, remove,  db, 'protocols'); // prettier-ignore
+        else handleInvalidMethod(req, res);
       } else if (pathname === '/plans') {
-        if (req.method === 'POST') insert('plans', req, res, db); // prettier-ignore
-        else if (req.method === 'PUT') update('plans', req, res, db); // prettier-ignore
-        else if (req.method === 'DELETE' && query.id) remove('plans', query.id, req, res, db); // prettier-ignore
-        else handleInvalid(req, res);
+        if (req.method === 'POST') handleRequest(req, res, insert,  db, 'plans'); // prettier-ignore
+        else if (req.method === 'PUT') handleRequest(req, res, update,  db, 'plans'); // prettier-ignore
+        else if (req.method === 'DELETE') handleRequest(req, res, remove,  db, 'plans'); // prettier-ignore
+        else handleInvalidMethod(req, res);
+      } else if (pathname === '/token') {
+        if (req.method === 'POST') handleRequest(req, res, getToken, db); // prettier-ignore
+        else handleInvalidMethod(req, res);
       } else {
-        handleInvalid(req, res);
+        handleInvalidUrl(req, res);
       }
     })
     .listen(port, () => {
@@ -27,7 +33,25 @@ export default (db, logger, port) => {
     });
 };
 
-const composeResponse = (req, res, callback) => {
+const handleRequest = async (req, res, next, db, ...args) => {
+  const { pathname } = url.parse(req.url, true);
+
+  try {
+    if (pathname !== '/token') {
+      // Check authorization header for JWT token
+      await authorize(req, db);
+    }
+
+    // Compose the response
+    composeResponse(req, res, next, db, ...args);
+  } catch (error) {
+    res.statusCode = error.statusCode || 401;
+
+    res.end(JSON.stringify({ error: error.message || 'Invalid request' }));
+  }
+};
+
+const composeResponse = (req, res, next, db, ...args) => {
   let body = '';
 
   req.on('data', chunk => {
@@ -35,59 +59,101 @@ const composeResponse = (req, res, callback) => {
   });
 
   req.on('end', async () => {
-    const data = body.length > 0 ? JSON.parse(body) : null;
-    const response = await callback(data);
+    const { query } = url.parse(req.url, true);
+    let data = body.length > 0 ? JSON.parse(body) : {};
 
-    res.statusCode = 200;
+    // Append query string data, data sent in the body have the highest preference
+    data = Object.assign({}, query || {}, data || {});
+
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(response));
+
+    try {
+      const response = await next(req, res, data, db, ...args);
+
+      res.statusCode = 200;
+
+      res.end(JSON.stringify(response));
+    } catch (error) {
+      res.statusCode = error.statusCode || 404;
+
+      res.end(JSON.stringify({ error: error.message || 'Invalid request' }));
+    }
   });
 };
 
-const insert = (collection, req, res, db) => {
-  composeResponse(req, res, async ({ data }) => {
-    const detailed = detail(data);
+const insert = async (req, res, data, db, collection) => {
+  const detailed = detail(data.data);
 
-    await db
-      .collection(collection)
-      .insertOne({ id: detailed.id.toString(), contents: data });
-
-    return {
-      success: `Successfully added ${collection.slice(0, -1)} ${detailed.id}`
-    };
+  await db.collection(collection).insertOne({
+    id: detailed.id.toString(),
+    contents: data.data,
+    createdBy: req.user.id
   });
+
+  return {
+    success: `Successfully added ${collection.slice(0, -1)} ${detailed.id}`
+  };
 };
 
-const update = (collection, req, res, db) => {
-  composeResponse(req, res, async ({ data }) => {
-    const detailed = detail(data);
+const update = async (req, res, data, db, collection) => {
+  const detailed = detail(data.data);
 
-    await db
-      .collection(collection)
-      .updateOne(
-        { id: detailed.id.toString() },
-        { $set: { id: detailed.id.toString(), contents: data } },
-        { upsert: true }
-      );
+  await db
+    .collection(collection)
+    .updateOne(
+      { id: detailed.id.toString(), createdBy: req.user.id },
+      { $set: { id: detailed.id.toString(), contents: data.data } }
+    );
 
-    return {
-      success: `Successfully updated ${collection.slice(0, -1)} ${detailed.id}`
-    };
-  });
+  return {
+    success: `Successfully updated ${collection.slice(0, -1)} ${detailed.id}`
+  };
 };
 
-const remove = (collection, id, req, res, db) => {
-  composeResponse(req, res, async () => {
-    await db.collection(collection).deleteOne({ id });
+const remove = async (req, res, data, db, collection) => {
+  const result = await db
+    .collection(collection)
+    .deleteOne({ id: data.id, createdBy: req.user.id });
 
-    return {
-      success: `Successfully removed ${collection.slice(0, -1)} ${id}`
-    };
-  });
+  if (result.deletedCount === 0) {
+    throw new NotFoundError();
+  }
+
+  return {
+    success: `Successfully removed ${collection.slice(0, -1)} ${data.id}`
+  };
 };
 
-const handleInvalid = (req, res) => {
+const handleInvalidMethod = (req, res) => {
+  res.statusCode = 405;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+};
+
+const handleInvalidUrl = (req, res) => {
   res.statusCode = 404;
   res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify({ error: 'Invalid request' }));
+  res.end(JSON.stringify({ error: 'Not Found' }));
+};
+
+const getToken = async (req, res, data, db) => {
+  const user = await db
+    .collection('users')
+    .findOne({ username: data.username });
+
+  if (!user || !data.password) {
+    throw new CredentialsDidNotMatchError();
+  }
+
+  // Authenticate
+  const isPasswordValid = bcrypt.compareSync(data.password, user.password);
+  if (!isPasswordValid) {
+    throw new CredentialsDidNotMatchError();
+  }
+
+  return {
+    token: jwtSign({ id: user.id }),
+    username: data.username,
+    userId: user.id
+  };
 };

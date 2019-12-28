@@ -1,17 +1,17 @@
 import {
-  Logger,
   GET_PROTOCOL,
+  Logger,
   SOCKET_PING,
+  WEBRTC_INTERNAL_MESSAGE,
   WEBRTC_JOIN_ROOM,
-  WEBRTC_PEER_LEFT,
-  WEBRTC_INTERNAL_MESSAGE
+  WEBRTC_PEER_LEFT
 } from 'syft.js';
 import { Server, WebSocket } from 'mock-socket';
-import Redis from 'redis-mock';
+import { examplePlans, exampleProtocols } from '../seed/samples';
 
-import runSockets from '../src/socket';
 import DBManager from './_db-manager';
-const { exampleProtocols, examplePlans } = require('../samples');
+import Redis from 'redis-mock';
+import runSockets from '../src/socket';
 
 const NO_RESPONSE = 'no-response';
 
@@ -152,7 +152,7 @@ describe('Socket', () => {
     wss.stop();
   });
 
-  test('should get plans for a user with only a protocolId', async () => {
+  test('should get plans for a worker with only a protocolId', async () => {
     const client = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
@@ -167,19 +167,17 @@ describe('Socket', () => {
     const { type, data } = message;
 
     expect(type).toBe(GET_PROTOCOL);
-    expect(data.user.workerId).not.toBe(null);
-    expect(data.user.scopeId).not.toBe(null);
-    expect(data.user.protocolId).toBe(exampleProtocols[1].id);
-    expect(data.user.role).toBe('creator');
+    expect(data.worker.workerId).not.toBe(null);
+    expect(data.worker.scopeId).not.toBe(null);
+    expect(data.worker.protocolId).toBe(exampleProtocols[1].id);
+    expect(data.worker.role).toBe('creator');
     expect(data.plan).toBe(examplePlans[0].contents);
     expect(data.protocol).toBe(exampleProtocols[1].contents);
     expect(Object.keys(data.participants).length).toBe(1);
-    expect(Object.values(data.participants)).toStrictEqual([
-      'assignment2'
-    ]);
+    expect(Object.values(data.participants)).toStrictEqual(['assignment2']);
   });
 
-  test('should get plans for a user with all their information', async () => {
+  test('should get plans for a worker with all their information', async () => {
     const client = new FakeClient(url);
 
     runSockets(db, wss, pub, sub, logger, port);
@@ -194,7 +192,7 @@ describe('Socket', () => {
       data: {
         protocolId: exampleProtocols[0].id,
         workerId: Object.keys(client.messages[0].data.participants)[0],
-        scopeId: client.messages[0].data.user.scopeId
+        scopeId: client.messages[0].data.worker.scopeId
       }
     });
     expect(client.messages.length).toBe(2);
@@ -202,13 +200,13 @@ describe('Socket', () => {
     const { type, data } = message2;
 
     expect(type).toBe(GET_PROTOCOL);
-    expect(data.user.workerId).toBe(
+    expect(data.worker.workerId).toBe(
       Object.keys(client.messages[0].data.participants)[0]
     );
-    expect(data.user.scopeId).toBe(client.messages[0].data.user.scopeId);
-    expect(data.user.protocolId).toBe(exampleProtocols[0].id);
-    expect(data.user.role).toBe('participant');
-    expect(data.user.plan).toBe(1);
+    expect(data.worker.scopeId).toBe(client.messages[0].data.worker.scopeId);
+    expect(data.worker.protocolId).toBe(exampleProtocols[0].id);
+    expect(data.worker.role).toBe('participant');
+    expect(data.worker.plan).toBe(1);
     expect(data.plan).toBe(examplePlans[1].contents);
     expect(data.protocol).toBe(exampleProtocols[0].contents);
     expect(Object.keys(data.participants).length).toBe(examplePlans.length - 1);
@@ -258,8 +256,8 @@ describe('Socket', () => {
       }
     });
 
-    const scopeId = creatorResponse.data.user.scopeId,
-      client1Id = creatorResponse.data.user.workerId,
+    const scopeId = creatorResponse.data.worker.scopeId,
+      client1Id = creatorResponse.data.worker.workerId,
       client2Id = Object.keys(creatorResponse.data.participants)[0];
 
     await client2.send({
@@ -309,7 +307,7 @@ describe('Socket', () => {
       type: GET_PROTOCOL,
       data: {
         protocolId: exampleProtocols[0].id,
-        scopeId: creatorResponse.data.user.scopeId,
+        scopeId: creatorResponse.data.worker.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[0]
       }
     });
@@ -320,7 +318,7 @@ describe('Socket', () => {
 
     expect(messageToClient2.type).toBe(WEBRTC_PEER_LEFT);
     expect(messageToClient2.data.workerId).toBe(
-      creatorResponse.data.user.workerId
+      creatorResponse.data.worker.workerId
     );
   });
 
@@ -342,7 +340,7 @@ describe('Socket', () => {
       type: GET_PROTOCOL,
       data: {
         protocolId: exampleProtocols[0].id,
-        scopeId: creatorResponse.data.user.scopeId,
+        scopeId: creatorResponse.data.worker.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[0]
       }
     });
@@ -351,14 +349,14 @@ describe('Socket', () => {
       type: GET_PROTOCOL,
       data: {
         protocolId: exampleProtocols[0].id,
-        scopeId: creatorResponse.data.user.scopeId,
+        scopeId: creatorResponse.data.worker.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[1]
       }
     });
 
     const internalPayload = {
       data: { somekey: 'somedata' },
-      scopeId: creatorResponse.data.user.scopeId,
+      scopeId: creatorResponse.data.worker.scopeId,
       // From client3 to client2.
       workerId: Object.keys(creatorResponse.data.participants)[1],
       to: Object.keys(creatorResponse.data.participants)[0],
@@ -399,7 +397,7 @@ describe('Socket', () => {
       type: GET_PROTOCOL,
       data: {
         protocolId: exampleProtocols[0].id,
-        scopeId: creatorResponse.data.user.scopeId,
+        scopeId: creatorResponse.data.worker.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[0]
       }
     });
@@ -407,7 +405,7 @@ describe('Socket', () => {
     const unknownMessage = {
       type: 'weird-type',
       data: {
-        scopeId: creatorResponse.data.user.scopeId,
+        scopeId: creatorResponse.data.worker.scopeId,
         workerId: Object.keys(creatorResponse.data.participants)[0]
       }
     };
@@ -445,7 +443,7 @@ describe('Socket', () => {
     pub.publish(
       WEBRTC_PEER_LEFT,
       JSON.stringify({
-        scopeId: creatorResponse.data.user.scopeId,
+        scopeId: creatorResponse.data.worker.scopeId,
         workerId: 'dummy'
       })
     );
