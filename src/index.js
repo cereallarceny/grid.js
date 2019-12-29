@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import Redis from 'redis';
 import { MongoClient } from 'mongodb';
-import { Logger } from 'syft.js';
+import { Logger } from '@openmined/syft.js';
 
 import {
   socketPort,

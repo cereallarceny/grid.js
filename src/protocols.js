@@ -1,4 +1,4 @@
-import { detail } from 'syft.js';
+import { detail } from '@openmined/syft.js';
 import { shortenId as s } from './_helpers';
 
 const uuid = require('uuid/v4');

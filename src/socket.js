@@ -4,7 +4,7 @@ import {
   WEBRTC_INTERNAL_MESSAGE,
   WEBRTC_JOIN_ROOM,
   WEBRTC_PEER_LEFT
-} from 'syft.js';
+} from '@openmined/syft.js';
 
 import { getProtocol } from './protocols';
 import { shortenId as s } from './_helpers';

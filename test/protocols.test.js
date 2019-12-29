@@ -1,7 +1,7 @@
 import { examplePlans, exampleProtocols } from '../seed/samples';
 
 import DBManager from './_db-manager';
-import { Logger } from 'syft.js';
+import { Logger } from '@openmined/syft.js';
 import { getProtocol } from '../src/protocols';
 
 const uuid = require('uuid/v4');

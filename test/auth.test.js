@@ -1,6 +1,6 @@
 import { jwtSign, jwtVerify } from '../src/auth';
 
-import { Logger } from 'syft.js';
+import { Logger } from '@openmined/syft.js';
 
 describe('Auth', () => {
   let logger;

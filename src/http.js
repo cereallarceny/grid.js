@@ -2,7 +2,7 @@ import { CredentialsDidNotMatchError, NotFoundError } from './errors';
 import { authorize, jwtSign } from './auth';
 
 import bcrypt from 'bcrypt';
-import { detail } from 'syft.js';
+import { detail } from '@openmined/syft.js';
 import http from 'http';
 import url from 'url';
 
