@@ -1,7 +1,7 @@
 node_modules
 coverage
 dist
-.DS_Store
-yarn.lock
-.idea
 tmp
+yarn.lock
+.DS_Store
+.idea

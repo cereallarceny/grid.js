@@ -1,4 +1,15 @@
 node_modules
 coverage
+docker
+seed
+src
+test
+tmp
+yarn.lock
 .DS_Store
-seeds
+.idea
+.babelrc
+.prettierrc
+.travis.yml
+app.json
+Procfile
