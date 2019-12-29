@@ -1,0 +1,12 @@
+FROM mongo
+
+RUN apt-get update && apt-get install -y curl git \
+ && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+ && apt-get install -y nodejs
+
+COPY . .
+
+RUN npm config set unsafe-perm true && npm install \
+    && npm cache rm --force && rm -rf ~/.npm && rm -rf /tmp/npm*
+
+CMD ["./seed/run-seed.sh"]

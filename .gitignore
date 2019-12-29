@@ -5,3 +5,4 @@ dist
 yarn.lock
 .idea
 tmp
+package-lock.json
