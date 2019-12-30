@@ -5,7 +5,7 @@ import {
   WEBRTC_INTERNAL_MESSAGE,
   WEBRTC_JOIN_ROOM,
   WEBRTC_PEER_LEFT
-} from 'syft.js';
+} from '@openmined/syft.js';
 import { Server, WebSocket } from 'mock-socket';
 import { examplePlans, exampleProtocols } from '../seed/samples';
 

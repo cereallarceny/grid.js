@@ -1,7 +1,7 @@
 import { examplePlans, exampleProtocols } from '../seed/samples';
 
 import DBManager from './_db-manager';
-import { Logger } from 'syft.js';
+import { Logger } from '@openmined/syft.js';
 import bcrypt from 'bcrypt';
 import http from 'http';
 import httpStart from '../src/http';

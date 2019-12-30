@@ -1,4 +1,4 @@
-const { detail } = require('syft.js');
+const { detail } = require('@openmined/syft.js');
 const uuid = require('uuid/v4');
 const bcrypt = require('bcrypt');
 

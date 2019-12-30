@@ -1,7 +1,9 @@
 node_modules
-.git
 coverage
 dist
-.DS_Store
+coverage
+tmp
 yarn.lock
-seeds
+.DS_Store
+.idea
+.git
