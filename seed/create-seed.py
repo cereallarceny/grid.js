@@ -26,16 +26,16 @@ def generateThreeWayProtocol(me):
     protocol = sy.Protocol([("worker1", bobPlan), ("worker2", theoPlan), ("worker3", alicePlan)])
 
     # Simplify the protocol
-    simplifiedProtocol = sy.serde._simplify(me, protocol)
+    simplifiedProtocol = sy.serde.msgpack.serde._simplify(me, protocol)
 
     # Simplify bobPlan
-    simplifiedBobPlan = sy.serde._simplify(me, bobPlan)
+    simplifiedBobPlan = sy.serde.msgpack.serde._simplify(me, bobPlan)
 
     # Simplify theoPlan
-    simplifiedTheoPlan = sy.serde._simplify(me, theoPlan)
+    simplifiedTheoPlan = sy.serde.msgpack.serde._simplify(me, theoPlan)
 
     # Simplify alicePlan
-    simplifiedAlicePlan = sy.serde._simplify(me, alicePlan)
+    simplifiedAlicePlan = sy.serde.msgpack.serde._simplify(me, alicePlan)
 
     return {
         "protocol": str(simplifiedProtocol),
@@ -61,13 +61,13 @@ def generateTwoWayProtocol(me):
     protocol2 = sy.Protocol([("worker1", jasonPlan), ("worker2", andyPlan)])
 
     # Simplify the protocol
-    simplifiedProtocol = sy.serde._simplify(me, protocol2)
+    simplifiedProtocol = sy.serde.msgpack.serde._simplify(me, protocol2)
 
     # Simplify jasonPlan
-    simplifiedJasonPlan = sy.serde._simplify(me, jasonPlan)
+    simplifiedJasonPlan = sy.serde.msgpack.serde._simplify(me, jasonPlan)
 
     # Simplify andyPlan
-    simplifiedAndyPlan = sy.serde._simplify(me, andyPlan)
+    simplifiedAndyPlan = sy.serde.msgpack.serde._simplify(me, andyPlan)
 
     return {
         "protocol": str(simplifiedProtocol),
