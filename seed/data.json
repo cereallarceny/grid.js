@@ -9,5 +9,10 @@
     "protocol": "(24, (28906269612, None, None, (1, ((6, ((5, (b'worker1',)), 52050972813)), (6, ((5, (b'worker2',)), 18433383507)))), False))",
     "jason": "(21, (52050972813, (23, ((1, ((33, ((6, ((5, (b'__add__',)), (25, (96705932678, 97860579965, (5, (b'me',)), None, (11, (1,)), True)), (6, ((25, (38061622915, 16356421672, (5, (b'me',)), None, (11, (2,)), False)),)), (0, ()))), (6, (15141345372,)))), (33, ((6, ((5, (b'torch.abs',)), None, (6, ((25, (20101591978, 15141345372, (5, (b'me',)), None, None, True)),)), (0, ()))), (6, (34896159436,)))))), (6, (97860579965,)), (6, (34896159436,)), None)), (22, ((1, (16356421672,)), (1, ((14, (16356421672, (6, ((6, (2,)), (5, (b'float32',)), (1, (4.199999809265137, 7.300000190734863)))), None, None, None, None, (5, (b'all',)))),)))), True, True, (1, ((11, (1,)),)), None, (5, (b'jasonPlan',)), None, None, (1, ())))",
     "andy": "(21, (18433383507, (23, ((1, ((33, ((6, ((5, (b'__add__',)), (25, (99282307344, 60760508877, (5, (b'me',)), None, (11, (1,)), True)), (6, ((25, (99282307344, 60760508877, (5, (b'me',)), None, (11, (1,)), True)),)), (0, ()))), (6, (87355607149,)))), (33, ((6, ((5, (b'torch.abs',)), None, (6, ((25, (42164278989, 87355607149, (5, (b'me',)), None, None, True)),)), (0, ()))), (6, (60757888340,)))))), (6, (60760508877,)), (6, (60757888340,)), None)), (22, ((1, ()), (1, ()))), False, True, (1, ((11, (1,)),)), None, (5, (b'andyPlan',)), None, None, (1, ())))"
+  },
+  "protobuf-protocol": {
+    "protocol": "CgYI3LvduywqFAoHCMnprrvCAhIJEgd3b3JrZXIxKhQKBwjDiOjk9QESCRIHd29ya2VyMg==",
+    "plan1": "CjcKBwjJ6a67wgISKgoECgICAxIHZmxvYXQzMrIBGAAAgD8AAABAAABAQAAAgEAAAKBAMzPDQEAE",
+    "plan2": "CjcKBwjDiOjk9QESKgoECgICAxIHZmxvYXQzMrIBGAAAgD8AAABAAABAQAAAgEAAAKBAMzPDQEAE"
   }
 }
