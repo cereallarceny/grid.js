@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.7.7",
-    "@openmined/syft.js": "git+https://github.com/OpenMined/syft.js.git#vvm/git-installable",
+    "@openmined/syft.js": "git+https://github.com/OpenMined/syft.js.git",
     "bcrypt": "^3.0.7",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.4.1",
