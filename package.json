@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.7.7",
-    "@openmined/syft.js": "0.0.1-0",
+    "@openmined/syft.js": "git+https://github.com/OpenMined/syft.js.git",
     "bcrypt": "^3.0.7",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.4.1",
@@ -46,7 +46,6 @@
     "@babel/node": "^7.7.7",
     "@babel/plugin-transform-runtime": "^7.7.6",
     "@babel/preset-env": "^7.7.7",
-    "babel-core": "^6.26.3",
     "husky": "^3.1.0",
     "jest": "^24.9.0",
     "mock-socket": "^9.0.2",
