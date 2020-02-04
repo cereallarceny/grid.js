@@ -1,9 +1,4 @@
-const {
-  detail,
-  unserialize,
-  ObjectMessage,
-  protobuf
-} = require('@openmined/syft.js');
+const { unserialize, ObjectMessage, protobuf } = require('@openmined/syft.js');
 const uuid = require('uuid/v4');
 const bcrypt = require('bcrypt');
 
@@ -14,24 +9,11 @@ const adminUsername = process.env.ADMIN_USERNAME || 'admin';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin-password';
 const adminUserId = uuid();
 
-const detailToObject = text => {
-  const detailedObject = detail(text);
-
-  return {
-    id: detailedObject.id.toString(),
-    contents: text,
-    createdBy: adminUserId
-  };
-};
-
 const protobufToObject = (bin, obj) => {
   const detailedObject = unserialize(null, bin, obj);
 
   return {
-    id:
-      detailedObject instanceof ObjectMessage
-        ? detailedObject.contents.id.toString()
-        : detailedObject.id.toString(),
+    id: detailedObject.id.toString(),
     contents: bin,
     createdBy: adminUserId
   };
@@ -46,25 +28,17 @@ const protocol2 = data['two-way'].protocol;
 const jasonPlan = data['two-way'].jason;
 const andyPlan = data['two-way'].andy;
 
-const protocol3 = data['protobuf-protocol'].protocol;
-const pbPlan1 = data['protobuf-protocol'].plan1;
-const pbPlan2 = data['protobuf-protocol'].plan2;
-
 const exampleProtocols = [
-  detailToObject(protocol1),
-  detailToObject(protocol2),
-  protobufToObject(protocol3, protobuf.syft_proto.messaging.v1.Protocol)
+  protobufToObject(protocol1, protobuf.syft_proto.messaging.v1.Protocol),
+  protobufToObject(protocol2, protobuf.syft_proto.messaging.v1.Protocol)
 ];
 
 const examplePlans = [
-  detailToObject(bobPlan),
-  detailToObject(theoPlan),
-  detailToObject(alicePlan),
-  detailToObject(jasonPlan),
-  detailToObject(andyPlan),
-  // NOTE: these are not Plans temporarily; Plan can't be serialized yet
-  protobufToObject(pbPlan1, protobuf.syft_proto.messaging.v1.ObjectMessage),
-  protobufToObject(pbPlan2, protobuf.syft_proto.messaging.v1.ObjectMessage)
+  protobufToObject(bobPlan, protobuf.syft_proto.messaging.v1.Plan),
+  protobufToObject(theoPlan, protobuf.syft_proto.messaging.v1.Plan),
+  protobufToObject(alicePlan, protobuf.syft_proto.messaging.v1.Plan),
+  protobufToObject(jasonPlan, protobuf.syft_proto.messaging.v1.Plan),
+  protobufToObject(andyPlan, protobuf.syft_proto.messaging.v1.Plan)
 ];
 
 const exampleUsers = [

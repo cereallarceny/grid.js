@@ -2,9 +2,14 @@ import { CredentialsDidNotMatchError, NotFoundError } from './errors';
 import { authorize, jwtSign } from './auth';
 
 import bcrypt from 'bcrypt';
-import { detail } from '@openmined/syft.js';
+import { unserialize, protobuf } from '@openmined/syft.js';
 import http from 'http';
 import url from 'url';
+
+const COLLECTION_TYPES = {
+  protocols: protobuf.syft_proto.messaging.v1.Protocol,
+  plans: protobuf.syft_proto.messaging.v1.Plan
+};
 
 export default (db, logger, port) => {
   return http
@@ -82,7 +87,7 @@ const composeResponse = (req, res, next, db, ...args) => {
 };
 
 const insert = async (req, res, data, db, collection) => {
-  const detailed = detail(data.data);
+  const detailed = unserialize(null, data.data, COLLECTION_TYPES[collection]);
 
   await db.collection(collection).insertOne({
     id: detailed.id.toString(),
@@ -96,7 +101,7 @@ const insert = async (req, res, data, db, collection) => {
 };
 
 const update = async (req, res, data, db, collection) => {
-  const detailed = detail(data.data);
+  const detailed = unserialize(null, data.data, COLLECTION_TYPES[collection]);
 
   await db
     .collection(collection)
