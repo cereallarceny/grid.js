@@ -106,33 +106,4 @@ describe('Protocol', () => {
     expect(getProtocolData.plan).toBe(examplePlans[1].contents);
     expect(Object.keys(getProtocolData.participants).length).toBe(2);
   });
-
-  test('should work with protobuf-serialized protocol', async () => {
-    const creatorProtocolData = await getProtocol(
-      db,
-      {
-        workerId: uuid(),
-        protocolId: exampleProtocols[2].id
-      },
-      logger
-    );
-    const getProtocolData = await getProtocol(
-      db,
-      {
-        workerId: Object.keys(creatorProtocolData.participants)[0],
-        protocolId: exampleProtocols[2].id,
-        scopeId: creatorProtocolData.worker.scopeId
-      },
-      logger
-    );
-
-    expect(creatorProtocolData.worker.scopeId).not.toBe(null);
-    expect(Object.keys(creatorProtocolData.participants).length).toBe(1);
-    expect(creatorProtocolData.plan).toBe(examplePlans[5].contents);
-    expect(getProtocolData.worker.scopeId).toBe(
-      creatorProtocolData.worker.scopeId
-    );
-    expect(getProtocolData.plan).toBe(examplePlans[6].contents);
-    expect(Object.keys(getProtocolData.participants).length).toBe(1);
-  });
 });

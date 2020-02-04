@@ -1,4 +1,4 @@
-import { detail, unserialize, protobuf } from '@openmined/syft.js';
+import { unserialize, protobuf } from '@openmined/syft.js';
 import { shortenId as s } from './_helpers';
 const uuid = require('uuid/v4');
 
@@ -20,17 +20,11 @@ export const getProtocol = async (
   else logger.log(`Found protocol ${protocolId}`);
 
   // We also need to detail the retrieved protocol to read the plan we will need to fetch later
-  let detailedProtocol;
-  try {
-    detailedProtocol = detail(protocol.contents);
-  } catch (e) {
-    // fallback to protobuf
-    detailedProtocol = unserialize(
-      null,
-      protocol.contents,
-      protobuf.syft_proto.messaging.v1.Protocol
-    );
-  }
+  let detailedProtocol = unserialize(
+    null,
+    protocol.contents,
+    protobuf.syft_proto.messaging.v1.Protocol
+  );
 
   // If we don't have a scopeId, we must be creating a new one
   if (!scopeId) {

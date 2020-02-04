@@ -3,7 +3,6 @@ import base64
 import syft as sy
 import torch as th
 from syft.serde import protobuf
-from syft.messaging.message import ObjectMessage
 
 def generateThreeWayProtocol(me):
     @sy.func2plan(args_shape=[(1,)], state=(th.tensor([4.2, 7.3]), ))
@@ -28,22 +27,26 @@ def generateThreeWayProtocol(me):
     protocol = sy.Protocol([("worker1", bobPlan), ("worker2", theoPlan), ("worker3", alicePlan)])
 
     # Simplify the protocol
-    simplifiedProtocol = sy.serde.msgpack.serde._simplify(me, protocol)
+    protocolPb, simplifiedProtocol = serializeToBase64Pb(me, protocol)
 
     # Simplify bobPlan
-    simplifiedBobPlan = sy.serde.msgpack.serde._simplify(me, bobPlan)
+    bobPlanPb, simplifiedBobPlan = serializeToBase64Pb(me, bobPlan)
 
     # Simplify theoPlan
-    simplifiedTheoPlan = sy.serde.msgpack.serde._simplify(me, theoPlan)
+    theoPlanPb, simplifiedTheoPlan = serializeToBase64Pb(me, theoPlan)
 
     # Simplify alicePlan
-    simplifiedAlicePlan = sy.serde.msgpack.serde._simplify(me, alicePlan)
+    alicePlanPb, simplifiedAlicePlan = serializeToBase64Pb(me, alicePlan)
 
     return {
         "protocol": str(simplifiedProtocol),
+        "_protocol": str(protocolPb),
         "bob": str(simplifiedBobPlan),
+        "_bob": str(bobPlanPb),
         "theo": str(simplifiedTheoPlan),
-        "alice": str(simplifiedAlicePlan)
+        "_theo": str(theoPlanPb),
+        "alice": str(simplifiedAlicePlan),
+        "_alice": str(alicePlanPb),
     }
 
 def generateTwoWayProtocol(me):
@@ -63,53 +66,31 @@ def generateTwoWayProtocol(me):
     protocol2 = sy.Protocol([("worker1", jasonPlan), ("worker2", andyPlan)])
 
     # Simplify the protocol
-    simplifiedProtocol = sy.serde.msgpack.serde._simplify(me, protocol2)
+    protocolPb, simplifiedProtocol = serializeToBase64Pb(me, protocol2)
 
     # Simplify jasonPlan
-    simplifiedJasonPlan = sy.serde.msgpack.serde._simplify(me, jasonPlan)
+    jasonPlanPb, simplifiedJasonPlan = serializeToBase64Pb(me, jasonPlan)
 
     # Simplify andyPlan
-    simplifiedAndyPlan = sy.serde.msgpack.serde._simplify(me, andyPlan)
+    andyPlanPb, simplifiedAndyPlan = serializeToBase64Pb(me, andyPlan)
 
     return {
         "protocol": str(simplifiedProtocol),
+        "_protocol": str(protocolPb),
         "jason": str(simplifiedJasonPlan),
-        "andy": str(simplifiedAndyPlan)
+        "_jason": str(jasonPlanPb),
+        "andy": str(simplifiedAndyPlan),
+        "_andy": str(andyPlanPb),
     }
 
 
 def serializeToBase64Pb(worker, obj):
     pb = protobuf.serde._bufferize(worker, obj)
     bin = pb.SerializeToString()
-    return base64.b64encode(bin).decode('utf-8')
+    return pb, base64.b64encode(bin).decode('utf-8')
 
-def generateProtobufProtocol(me):
-    @sy.func2plan(args_shape=[(1,)])
-    def plan1(x):
-        y = x + x
-        z = th.abs(y)
-        return z
-
-    @sy.func2plan(args_shape=[(1,)])
-    def plan2(x):
-        y = x + x
-        z = th.abs(y)
-        return z
-
-    tensor1 = th.tensor([[1, 2, 3], [4, 5, 6.1]])
-    tensor2 = th.tensor([[1, 2, 3], [4, 5, 6.1]])
-    plan1.id = tensor1.id
-    plan2.id = tensor2.id
-
-    protocol = sy.Protocol([("worker1", plan1), ("worker2", plan2)])
-    # This is not real Plan yet; Plan serialization is not possible yet
-    obj_msg1 = ObjectMessage(tensor1)
-    obj_msg2 = ObjectMessage(tensor2)
-    return {
-        "protocol": serializeToBase64Pb(me, protocol),
-        "plan1": serializeToBase64Pb(me, obj_msg1),
-        "plan2": serializeToBase64Pb(me, obj_msg2),
-    }
+# Replace ID_PROVIDER so we have same nice IDs every time
+sy.ID_PROVIDER = [ int(1e10) + i for i in reversed(range(100)) ]
 
 sy.create_sandbox(globals(), download_data=False)
 hook.local_worker.is_client_worker = False
@@ -118,9 +99,8 @@ me = hook.local_worker
 
 first = generateThreeWayProtocol(me)
 second = generateTwoWayProtocol(me)
-protobufProtocol = generateProtobufProtocol(me)
 
-data = { "three-way": first, "two-way": second, "protobuf-protocol": protobufProtocol }
+data = { "three-way": first, "two-way": second }
 
 print(data)
 print("\n----------\n\nSeed file created successfully!")

@@ -451,29 +451,4 @@ describe('Socket', () => {
     const peerLeftMessage = await client1.receive();
     expect(peerLeftMessage.data.workerId).toBe('dummy');
   });
-
-  test('should get protocol/plans for protobuf-serialized protocol', async () => {
-    const client = new FakeClient(url);
-
-    runSockets(db, wss, pub, sub, logger, port);
-
-    const message = await client.send({
-      type: GET_PROTOCOL,
-      data: { protocolId: exampleProtocols[2].id }
-    });
-
-    expect(client.messages.length).toBe(1);
-
-    const { type, data } = message;
-
-    expect(type).toBe(GET_PROTOCOL);
-    expect(data.worker.workerId).not.toBe(null);
-    expect(data.worker.scopeId).not.toBe(null);
-    expect(data.worker.protocolId).toBe(exampleProtocols[2].id);
-    expect(data.worker.role).toBe('creator');
-    expect(data.plan).toBe(examplePlans[5].contents);
-    expect(data.protocol).toBe(exampleProtocols[2].contents);
-    expect(Object.keys(data.participants).length).toBe(1);
-    expect(Object.values(data.participants)).toStrictEqual(['worker2']);
-  });
 });
